@@ -4,21 +4,21 @@ import * as schemas from './schemas'
 /**
  * Validate workflow data before sending to API
  */
-export function validateWorkflow(data: unknown): schemas.WorkflowSchema {
+export function validateWorkflow(data: unknown): z.infer<typeof schemas.WorkflowSchema> {
   return schemas.WorkflowSchema.parse(data)
 }
 
 /**
  * Validate node data
  */
-export function validateNode(data: unknown): schemas.WorkflowNodeSchema {
+export function validateNode(data: unknown): z.infer<typeof schemas.WorkflowNodeSchema> {
   return schemas.WorkflowNodeSchema.parse(data)
 }
 
 /**
  * Validate edge data
  */
-export function validateEdge(data: unknown): schemas.WorkflowEdgeSchema {
+export function validateEdge(data: unknown): z.infer<typeof schemas.WorkflowEdgeSchema> {
   return schemas.WorkflowEdgeSchema.parse(data)
 }
 

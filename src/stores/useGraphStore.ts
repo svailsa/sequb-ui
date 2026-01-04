@@ -24,7 +24,7 @@ interface GraphStore {
   clearWorkflow: () => void
 }
 
-export const useGraphStore = create<GraphStore>((set, get) => ({
+export const useGraphStore = create<GraphStore>((set) => ({
   nodes: [],
   edges: [],
   selectedNodeId: null,

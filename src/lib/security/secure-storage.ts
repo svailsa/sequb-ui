@@ -4,7 +4,6 @@
  */
 
 export class SecureStorage {
-  private static readonly SALT = 'sequb-secure-storage-v1'
   private static encryptionKey: CryptoKey | null = null
 
   /**

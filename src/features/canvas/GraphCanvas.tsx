@@ -1,5 +1,6 @@
-import React, { useCallback, useMemo } from 'react'
-import ReactFlow, {
+import { useCallback, useMemo } from 'react'
+import { ReactFlow } from '@xyflow/react'
+import {
   Background,
   Controls,
   MiniMap,
@@ -107,8 +108,8 @@ export function GraphCanvas() {
         <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
         <Controls />
         <MiniMap 
-          nodeStrokeColor={(n) => '#666'}
-          nodeColor={(n) => '#fff'}
+          nodeStrokeColor={() => '#666'}
+          nodeColor={() => '#fff'}
           nodeBorderRadius={2}
         />
       </ReactFlow>

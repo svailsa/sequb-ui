@@ -2,11 +2,10 @@ import axios, { AxiosError } from 'axios'
 import { Registry, Workflow, ExecutionStatus } from '@/types/schema'
 import { invoke } from '@tauri-apps/api/core'
 import { validateWorkflow, validatePluginUpload } from './validation/validators'
-import { sanitizeText, sanitizeUrl } from './validation/sanitizers'
+import { sanitizeText } from './validation/sanitizers'
 
 // Get port from Tauri backend
 let API_URL = 'http://localhost:3000/api/v1'
-let REQUEST_COUNT = 0
 const MAX_REQUESTS_PER_MINUTE = 100
 
 // Rate limiting

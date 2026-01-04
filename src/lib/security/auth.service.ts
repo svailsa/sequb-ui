@@ -151,7 +151,7 @@ export class AuthService {
   /**
    * Refresh access token
    */
-  private static async refreshToken(): Promise<boolean> {
+  static async refreshToken(): Promise<boolean> {
     // Prevent multiple simultaneous refresh attempts
     if (this.refreshPromise) {
       return this.refreshPromise

@@ -36,7 +36,7 @@ export function NodePalette() {
     if (!acc[node.category]) {
       acc[node.category] = []
     }
-    acc[node.category].push({ key, ...node })
+    acc[node.category]!.push({ key, ...node })
     return acc
   }, {} as Record<string, Array<{ key: string } & typeof registry.nodes[string]>>)
   
@@ -49,7 +49,8 @@ export function NodePalette() {
           <h3 className="text-sm font-medium text-gray-700 mb-2">{category}</h3>
           <div className="space-y-2">
             {nodes.map((node) => {
-              const Icon = node.icon ? iconMap[node.icon] : Terminal
+              const iconName = node.icon || ''
+              const Icon = iconMap[iconName] || Terminal
               
               return (
                 <div

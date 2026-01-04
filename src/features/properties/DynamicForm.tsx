@@ -1,4 +1,3 @@
-import React from 'react'
 import { NodeInput } from '@/types/schema'
 import { useGraphStore } from '@/stores/useGraphStore'
 import { useRegistryStore } from '@/stores/useRegistryStore'
@@ -26,8 +25,8 @@ export function DynamicForm() {
     )
   }
   
-  const nodeType = selectedNode.data.nodeType
-  const nodeDefinition = registry.nodes[nodeType]
+  const nodeType = String(selectedNode.data['nodeType'] || '')
+  const nodeDefinition = nodeType ? registry.nodes[nodeType] : undefined
   
   if (!nodeDefinition) {
     return (
@@ -46,7 +45,8 @@ export function DynamicForm() {
         case 'text':
         case 'textarea':
         case 'code':
-          validatedValue = validateTextInput(sanitizeText(value))
+          const sanitized = sanitizeText(value)
+          validatedValue = sanitized ? validateTextInput(sanitized) : ''
           break
         case 'number':
           validatedValue = validateNumberInput(value)
@@ -60,7 +60,9 @@ export function DynamicForm() {
           break
       }
       
-      updateNode(selectedNodeId, { [key]: validatedValue })
+      if (selectedNodeId) {
+        updateNode(selectedNodeId, { [key]: validatedValue })
+      }
     } catch (error) {
       console.error(`Invalid input for ${key}:`, error)
       // Optionally show user-friendly error message
@@ -147,7 +149,7 @@ export function DynamicForm() {
       </div>
       
       <div className="space-y-4">
-        {nodeDefinition.inputs.map((input) => (
+        {nodeDefinition.inputs.map((input: any) => (
           <div key={input.key}>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               {input.label}

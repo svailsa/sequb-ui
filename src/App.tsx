@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { listen } from '@tauri-apps/api/event'
 import { GraphCanvas } from './features/canvas/GraphCanvas'
 import { DynamicForm } from './features/properties/DynamicForm'
@@ -78,17 +78,20 @@ function App() {
         name: 'Untitled Workflow',
         nodes: nodes.map(n => ({
           id: n.id,
-          type: n.data.nodeType,
+          type: String(n.data['nodeType'] || 'default'),
           position: n.position,
           data: n.data,
         })),
-        edges: edges.map(e => ({
-          id: e.id,
-          source: e.source,
-          target: e.target,
-          sourceHandle: e.sourceHandle,
-          targetHandle: e.targetHandle,
-        })),
+        edges: edges.map(e => {
+          const edge: any = {
+            id: e.id,
+            source: e.source,
+            target: e.target,
+          }
+          if (e.sourceHandle) edge.sourceHandle = e.sourceHandle
+          if (e.targetHandle) edge.targetHandle = e.targetHandle
+          return edge
+        }),
       }
       
       const { data: createdWorkflow } = await api.workflow.create(workflow)

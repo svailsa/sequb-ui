@@ -7,7 +7,6 @@ DOMPurify.setConfig({
   KEEP_CONTENT: true,
   RETURN_DOM: false,
   RETURN_DOM_FRAGMENT: false,
-  RETURN_DOM_IMPORT: false,
 })
 
 /**

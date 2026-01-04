@@ -97,22 +97,22 @@ export class InputSanitizer {
   /**
    * Sanitize HTML content to prevent XSS
    */
-  static sanitizeHTML(dirty: string, options?: DOMPurify.Config): string {
-    const defaultConfig: DOMPurify.Config = {
+  static sanitizeHTML(dirty: string, options?: any): string {
+    const defaultConfig = {
       ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li'],
       ALLOWED_ATTR: ['href', 'target', 'rel'],
       ALLOW_DATA_ATTR: false,
       USE_PROFILES: { html: true }
     }
     
-    return DOMPurify.sanitize(dirty, { ...defaultConfig, ...options })
+    return DOMPurify.sanitize(dirty, options || defaultConfig) as unknown as string
   }
 
   /**
    * Sanitize plain text (remove all HTML)
    */
   static sanitizePlainText(dirty: string): string {
-    return DOMPurify.sanitize(dirty, { ALLOWED_TAGS: [] })
+    return DOMPurify.sanitize(dirty, { ALLOWED_TAGS: [] }) as unknown as string
   }
 
   /**
