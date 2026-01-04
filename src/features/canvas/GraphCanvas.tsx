@@ -10,6 +10,8 @@ import ReactFlow, {
 import '@xyflow/react/dist/style.css'
 import { useGraphStore } from '@/stores/useGraphStore'
 import { UniversalNode } from './UniversalNode'
+import { validateDragNodeType, validateNode } from '@/lib/validation/validators'
+import { sanitizeNodeType } from '@/lib/validation/sanitizers'
 
 export function GraphCanvas() {
   const {
@@ -40,8 +42,17 @@ export function GraphCanvas() {
     (event: React.DragEvent) => {
       event.preventDefault()
       
-      const nodeType = event.dataTransfer.getData('application/sequb-node')
-      if (!nodeType) return
+      const rawNodeType = event.dataTransfer.getData('application/sequb-node')
+      if (!rawNodeType) return
+      
+      // Validate and sanitize the node type
+      const validatedNodeType = validateDragNodeType(rawNodeType)
+      if (!validatedNodeType) {
+        console.error('Invalid node type:', rawNodeType)
+        return
+      }
+      
+      const sanitizedNodeType = sanitizeNodeType(validatedNodeType)
       
       const reactFlowBounds = (event.target as HTMLElement)
         .closest('.react-flow')
@@ -50,18 +61,24 @@ export function GraphCanvas() {
       if (!reactFlowBounds) return
       
       const position = {
-        x: event.clientX - reactFlowBounds.left,
-        y: event.clientY - reactFlowBounds.top,
+        x: Math.max(0, Math.min(5000, event.clientX - reactFlowBounds.left)), // Limit position
+        y: Math.max(0, Math.min(5000, event.clientY - reactFlowBounds.top)),
       }
       
       const newNode: Node = {
-        id: `node-${Date.now()}`,
+        id: `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         type: 'default',
         position,
-        data: { nodeType },
+        data: { nodeType: sanitizedNodeType },
       }
       
-      useGraphStore.getState().addNode(newNode)
+      try {
+        // Validate the entire node structure
+        validateNode(newNode)
+        useGraphStore.getState().addNode(newNode)
+      } catch (error) {
+        console.error('Invalid node structure:', error)
+      }
     },
     []
   )

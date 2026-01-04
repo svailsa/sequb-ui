@@ -7,6 +7,8 @@ import { TextAreaWidget } from './widgets/TextAreaWidget'
 import { SelectWidget } from './widgets/SelectWidget'
 import { NumberWidget } from './widgets/NumberWidget'
 import { CheckboxWidget } from './widgets/CheckboxWidget'
+import { validateTextInput, validateNumberInput } from '@/lib/validation/validators'
+import { sanitizeText } from '@/lib/validation/sanitizers'
 
 export function DynamicForm() {
   const selectedNodeId = useGraphStore((state) => state.selectedNodeId)
@@ -35,8 +37,34 @@ export function DynamicForm() {
     )
   }
   
-  const handleChange = (key: string, value: any) => {
-    updateNode(selectedNodeId, { [key]: value })
+  const handleChange = (key: string, value: any, inputType: string) => {
+    try {
+      let validatedValue = value
+      
+      // Validate based on input type
+      switch (inputType) {
+        case 'text':
+        case 'textarea':
+        case 'code':
+          validatedValue = validateTextInput(sanitizeText(value))
+          break
+        case 'number':
+          validatedValue = validateNumberInput(value)
+          break
+        case 'select':
+        case 'model_picker':
+          validatedValue = sanitizeText(value)
+          break
+        case 'checkbox':
+          validatedValue = Boolean(value)
+          break
+      }
+      
+      updateNode(selectedNodeId, { [key]: validatedValue })
+    } catch (error) {
+      console.error(`Invalid input for ${key}:`, error)
+      // Optionally show user-friendly error message
+    }
   }
   
   const renderWidget = (input: NodeInput) => {
@@ -47,7 +75,7 @@ export function DynamicForm() {
         return (
           <TextWidget
             value={value}
-            onChange={(val) => handleChange(input.key, val)}
+            onChange={(val) => handleChange(input.key, val, 'text')}
             placeholder={input.label}
           />
         )
@@ -56,7 +84,7 @@ export function DynamicForm() {
         return (
           <TextAreaWidget
             value={value}
-            onChange={(val) => handleChange(input.key, val)}
+            onChange={(val) => handleChange(input.key, val, 'textarea')}
             placeholder={input.label}
           />
         )
@@ -66,7 +94,7 @@ export function DynamicForm() {
         return (
           <SelectWidget
             value={value}
-            onChange={(val) => handleChange(input.key, val)}
+            onChange={(val) => handleChange(input.key, val, input.widget)}
             options={input.options || []}
             placeholder={`Select ${input.label}`}
           />
@@ -76,7 +104,7 @@ export function DynamicForm() {
         return (
           <NumberWidget
             value={value}
-            onChange={(val) => handleChange(input.key, val)}
+            onChange={(val) => handleChange(input.key, val, 'number')}
             placeholder={input.label}
           />
         )
@@ -85,7 +113,7 @@ export function DynamicForm() {
         return (
           <CheckboxWidget
             checked={value}
-            onChange={(val) => handleChange(input.key, val)}
+            onChange={(val) => handleChange(input.key, val, 'checkbox')}
             label={input.label}
           />
         )
@@ -94,7 +122,7 @@ export function DynamicForm() {
         return (
           <TextAreaWidget
             value={value}
-            onChange={(val) => handleChange(input.key, val)}
+            onChange={(val) => handleChange(input.key, val, 'code')}
             placeholder={input.label}
             className="font-mono text-xs"
           />
@@ -104,7 +132,7 @@ export function DynamicForm() {
         return (
           <TextWidget
             value={value}
-            onChange={(val) => handleChange(input.key, val)}
+            onChange={(val) => handleChange(input.key, val, 'text')}
             placeholder={input.label}
           />
         )

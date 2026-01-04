@@ -7,14 +7,23 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+.pnp
+.pnp.js
+
+# Build outputs
 dist
 dist-ssr
+build
+out
 *.local
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
 .idea
 .DS_Store
 *.suo
@@ -22,6 +31,13 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
 
 # Tauri
 src-tauri/target/
@@ -30,3 +46,69 @@ src-tauri/Cargo.lock
 
 # Generated binaries
 src-tauri/binaries/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Testing
+coverage
+*.lcov
+.nyc_output
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# OS files
+Thumbs.db
+Desktop.ini
+.Spotlight-V100
+.Trashes
+
+# Package manager
+.npm
+.eslintcache
+.stylelintcache
+.yarn-integrity
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Security
+*.pem
+*.key
+*.cert
+*.crt
+sequb-auth-token
+.secrets/
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+.temp/
+tmp/
+temp/
+
+# Debug
+debug.log
+*.stackdump
+
+# Backups
+*.bak
+*.backup
+*.old
+
+# Lock files (keep package-lock.json)
+yarn.lock
+pnpm-lock.yaml

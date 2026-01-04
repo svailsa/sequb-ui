@@ -1,14 +1,38 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "app": {
-    "withGlobalTauri": true,
+    "withGlobalTauri": false,
+    "security": {
+      "csp": {
+        "default-src": ["'self'"],
+        "script-src": ["'self'"],
+        "style-src": ["'self'", "'unsafe-inline'"],
+        "img-src": ["'self'", "data:", "https:"],
+        "connect-src": ["'self'", "http://localhost:*", "http://127.0.0.1:*"],
+        "font-src": ["'self'", "data:"],
+        "media-src": ["'self'"],
+        "object-src": ["'none'"],
+        "base-uri": ["'none'"],
+        "form-action": ["'self'"],
+        "frame-ancestors": ["'none'"],
+        "block-all-mixed-content": true,
+        "upgrade-insecure-requests": true
+      },
+      "dangerousDisableAssetCspModification": false,
+      "freezePrototype": true
+    },
     "windows": [
       {
         "title": "Sequb",
         "width": 1400,
         "height": 900,
         "minWidth": 1024,
-        "minHeight": 768
+        "minHeight": 768,
+        "resizable": true,
+        "fullscreen": false,
+        "alwaysOnTop": false,
+        "fileDropEnabled": false,
+        "decorations": true
       }
     ]
   },
@@ -54,12 +78,14 @@
   "identifier": "com.sequb.ui",
   "plugins": {
     "shell": {
-      "open": true,
+      "open": false,
       "scope": [
         {
           "name": "sequb-server",
           "sidecar": true,
-          "args": []
+          "args": {
+            "validator": "\\S+"
+          }
         }
       ]
     }
