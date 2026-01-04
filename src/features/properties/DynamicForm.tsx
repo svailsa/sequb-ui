@@ -70,9 +70,9 @@ export function DynamicForm() {
   }
   
   const renderWidget = (input: NodeInput) => {
-    const value = selectedNode.data[input.key] ?? input.defaultValue ?? ''
+    const value = selectedNode.data[input.key] ?? input.default ?? ''
     
-    switch (input.widget) {
+    switch (input.type) {
       case 'text':
         return (
           <TextWidget
@@ -96,7 +96,7 @@ export function DynamicForm() {
         return (
           <SelectWidget
             value={value}
-            onChange={(val) => handleChange(input.key, val, input.widget)}
+            onChange={(val) => handleChange(input.key, val, input.type)}
             options={input.options || []}
             placeholder={`Select ${input.label}`}
           />

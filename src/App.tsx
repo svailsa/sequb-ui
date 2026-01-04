@@ -32,12 +32,28 @@ function App() {
     const checkServer = async () => {
       try {
         await initializeApiClient()
-        await api.health.check()
+        const response = await api.health.check()
+        console.log('Health check response:', response.data)
         setIsServerReady(true)
       } catch (error) {
         console.log('Server not ready yet, waiting for event...')
       }
     }
+    
+    // Retry connection a few times
+    let retries = 0
+    const maxRetries = 10
+    const retryInterval = setInterval(async () => {
+      if (retries >= maxRetries) {
+        clearInterval(retryInterval)
+        return
+      }
+      retries++
+      await checkServer()
+      if (isServerReady) {
+        clearInterval(retryInterval)
+      }
+    }, 1000)
     
     checkServer()
     
@@ -97,7 +113,7 @@ function App() {
       const { data: createdWorkflow } = await api.workflow.create(workflow)
       const { data: execution } = await api.workflow.execute(createdWorkflow.id)
       
-      console.log('Workflow executing with runId:', execution.runId)
+      console.log('Workflow executing with execution_id:', execution.execution_id || execution)
       // TODO: Add execution monitoring UI
     } catch (error) {
       console.error('Failed to execute workflow:', error)

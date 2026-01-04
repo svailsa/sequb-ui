@@ -1,17 +1,20 @@
 export interface NodeInput {
   key: string
-  widget: 'text' | 'textarea' | 'select' | 'code' | 'model_picker' | 'number' | 'checkbox'
+  type: 'text' | 'textarea' | 'select' | 'code' | 'model_picker' | 'number' | 'checkbox' | 'any'
   label: string
+  required?: boolean
   options?: Array<{ value: string; label: string }>
-  defaultValue?: any
+  default?: any
 }
 
 export interface NodeOutput {
   key: string
   label: string
+  type: 'text' | 'number' | 'object' | 'any'
 }
 
 export interface NodeDefinition {
+  id: string
   label: string
   category: string
   icon?: string
@@ -20,8 +23,8 @@ export interface NodeDefinition {
 }
 
 export interface Registry {
-  categories: string[]
   nodes: Record<string, NodeDefinition>
+  plugins: string[]
 }
 
 export interface WorkflowNode {

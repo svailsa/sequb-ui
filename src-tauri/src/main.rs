@@ -99,8 +99,8 @@ fn main() {
                 }
             }
             
-            // Find a free port dynamically
-            let port = find_free_port();
+            // Use the default port that the backend expects
+            let port = 3000u16;
             println!("Using port: {}", port);
             
             // Spawn the sidecar with security restrictions
@@ -108,7 +108,8 @@ fn main() {
                 .sidecar("sequb-server")
                 .unwrap()
                 .env("PORT", port.to_string())
-                .env("SEQUB_ENV", "production")
+                .env("SEQUB_ENV", "development")
+                .env("RUST_LOG", "info")
                 .spawn()
                 .expect("Failed to spawn sidecar");
             
@@ -117,6 +118,13 @@ fn main() {
                 let mut state = sidecar_state_clone.lock().unwrap();
                 state.port = Some(port);
             }
+            
+            // Emit server-ready event after a short delay to allow server to start
+            let window_ready = window.clone();
+            tauri::async_runtime::spawn(async move {
+                tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+                window_ready.emit("server-ready", port).unwrap();
+            });
             
             // Handle sidecar events
             let sidecar_state_events = sidecar_state_clone.clone();
