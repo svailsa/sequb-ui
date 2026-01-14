@@ -1,86 +1,34 @@
-import { useEffect, useState } from 'react'
-import { listen } from '@tauri-apps/api/event'
+import { useEffect } from 'react'
 import { GraphCanvas } from './features/canvas/GraphCanvas'
 import { DynamicForm } from './features/properties/DynamicForm'
 import { NodePalette } from './features/NodePalette'
 import { useRegistryStore } from './stores/useRegistryStore'
-import { api, initializeApiClient } from './lib/api'
+import { api } from './lib/api'
 import { PlayCircle, Save, FolderOpen, Plus } from 'lucide-react'
 import { useGraphStore } from './stores/useGraphStore'
+import { Bootloader } from './components/Bootloader'
 
-function App() {
-  const [isServerReady, setIsServerReady] = useState(false)
-  const [connectionError, setConnectionError] = useState<string | null>(null)
+function AppContent() {
   const { setRegistry, setLoading, setError } = useRegistryStore()
   const { nodes, edges } = useGraphStore()
   
-  // Wait for server to be ready
+  // Fetch registry on mount (server is guaranteed to be ready)
   useEffect(() => {
-    let unsubscribe: any
-    
-    const setupListener = async () => {
-      unsubscribe = await listen('server-ready', async (event) => {
-        console.log('Server ready on port:', event.payload)
-        await initializeApiClient()
-        setIsServerReady(true)
-      })
-    }
-    
-    setupListener()
-    
-    // Also try to connect immediately in case server is already running
-    const checkServer = async () => {
-      try {
-        await initializeApiClient()
-        const response = await api.health.check()
-        console.log('Health check response:', response.data)
-        setIsServerReady(true)
-      } catch (error) {
-        console.log('Server not ready yet, waiting for event...')
-      }
-    }
-    
-    // Retry connection a few times
-    let retries = 0
-    const maxRetries = 10
-    const retryInterval = setInterval(async () => {
-      if (retries >= maxRetries) {
-        clearInterval(retryInterval)
-        return
-      }
-      retries++
-      await checkServer()
-      if (isServerReady) {
-        clearInterval(retryInterval)
-      }
-    }, 1000)
-    
-    checkServer()
-    
-    return () => {
-      if (unsubscribe) unsubscribe()
-    }
-  }, [])
-  
-  // Fetch registry once server is ready
-  useEffect(() => {
-    if (!isServerReady) return
-    
     const fetchRegistry = async () => {
       setLoading(true)
       try {
         const { data } = await api.registry.get()
         setRegistry(data)
-        setConnectionError(null)
       } catch (error) {
         console.error('Failed to fetch registry:', error)
         setError('Failed to fetch node registry')
-        setConnectionError('Failed to connect to Sequb server. Make sure the backend is running.')
+      } finally {
+        setLoading(false)
       }
     }
     
     fetchRegistry()
-  }, [isServerReady, setRegistry, setLoading, setError])
+  }, [setRegistry, setLoading, setError])
   
   const handleExecute = async () => {
     if (nodes.length === 0) {
@@ -119,34 +67,6 @@ function App() {
       console.error('Failed to execute workflow:', error)
       alert('Failed to execute workflow')
     }
-  }
-  
-  if (!isServerReady) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Starting Sequb Server...</p>
-        </div>
-      </div>
-    )
-  }
-  
-  if (connectionError) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
-        <div className="text-center max-w-md">
-          <div className="text-red-500 mb-4">
-            <svg className="w-16 h-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <h2 className="text-xl font-semibold mb-2">Connection Error</h2>
-          <p className="text-gray-600">{connectionError}</p>
-        </div>
-      </div>
-    )
   }
   
   return (
@@ -197,6 +117,14 @@ function App() {
         <DynamicForm />
       </div>
     </div>
+  )
+}
+
+function App() {
+  return (
+    <Bootloader>
+      <AppContent />
+    </Bootloader>
   )
 }
 

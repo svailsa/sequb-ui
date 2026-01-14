@@ -1,7 +1,7 @@
 import { memo } from 'react'
 import { Handle, Position, NodeProps } from '@xyflow/react'
 import { useRegistryStore } from '@/stores/useRegistryStore'
-import { LucideIcon, Slack, Terminal, Code, Brain, Zap, Database, Send, FileText, Search, Play } from 'lucide-react'
+import { LucideIcon, Slack, Terminal, Code, Brain, Zap, Database, Send, FileText, Search, Play, AlertCircle } from 'lucide-react'
 
 const iconMap: Record<string, LucideIcon> = {
   slack: Slack,
@@ -19,85 +19,108 @@ const iconMap: Record<string, LucideIcon> = {
 export const UniversalNode = memo<NodeProps>(({ data, selected }) => {
   const registry = useRegistryStore((state) => state.registry)
   
+  // Fallback for missing registry or nodeType
   if (!registry || !data['nodeType']) {
     return (
-      <div className="bg-gray-100 border-2 border-gray-300 rounded-lg p-4 min-w-[200px]">
-        <div className="text-sm text-gray-500">Unknown Node Type</div>
+      <div className="p-2 bg-red-100 text-red-500 rounded-md border-2 border-red-300 min-w-[150px]">
+        <div className="flex items-center gap-2">
+          <AlertCircle className="w-4 h-4" />
+          <span className="text-sm">Unknown Node</span>
+        </div>
       </div>
     )
   }
   
   const nodeType = String(data['nodeType'] || '')
-  const nodeDefinition = registry.nodes[nodeType]
-  if (!nodeDefinition) {
+  const nodeDef = registry.nodes[nodeType]
+  
+  // Fallback for missing plugins (e.g., if a plugin was uninstalled)
+  if (!nodeDef) {
     return (
-      <div className="bg-gray-100 border-2 border-gray-300 rounded-lg p-4 min-w-[200px]">
-        <div className="text-sm text-gray-500">Node type not found: {nodeType}</div>
+      <div className="p-2 bg-red-100 text-red-500 rounded-md border-2 border-red-300 min-w-[150px]">
+        <div className="flex items-center gap-2">
+          <AlertCircle className="w-4 h-4" />
+          <span className="text-sm">Unknown Node: {nodeType}</span>
+        </div>
       </div>
     )
   }
   
-  const iconName = nodeDefinition.icon || ''
-  const Icon = iconMap[iconName] || Terminal
+  const Icon = iconMap[nodeDef.icon || ''] || Terminal
   
   return (
     <div
-      className={`bg-white border-2 rounded-lg shadow-md min-w-[250px] transition-all ${
-        selected ? 'border-blue-500 shadow-lg' : 'border-gray-300'
-      }`}
+      className={`
+        sequb-node shadow-md rounded-md bg-white border-2 min-w-[200px]
+        ${selected ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-slate-200'}
+      `}
     >
-      {/* Header */}
-      <div className="px-4 py-2 bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-lg border-b">
-        <div className="flex items-center gap-2">
-          <Icon className="w-4 h-4 text-gray-600" />
-          <span className="font-medium text-sm">{String(data['label'] || nodeDefinition.label)}</span>
-        </div>
-        <div className="text-xs text-gray-500 mt-1">{nodeDefinition.category}</div>
+      {/* HEADER */}
+      <div className="flex items-center gap-2 p-2 border-b bg-slate-50 rounded-t-md">
+        <Icon className="w-4 h-4 text-slate-600" />
+        <span className="font-semibold text-sm">{nodeDef.label}</span>
       </div>
-      
-      {/* Body */}
-      <div className="p-4">
-        {/* Inputs */}
-        <div className="space-y-2">
-          {nodeDefinition.inputs.map((input: any, index: number) => (
-            <div key={input.key} className="relative">
-              <Handle
-                type="target"
-                position={Position.Left}
-                id={input.key}
-                style={{ top: `${20 + index * 30}px` }}
-                className="!w-3 !h-3 !bg-gray-400 !border-2 !border-white"
-              />
-              <div className="pl-4 text-xs text-gray-600">{input.label}</div>
-              {data[input.key] !== undefined && data[input.key] !== null && (
-                <div className="pl-4 text-xs text-gray-800 truncate max-w-[180px]">
-                  {String(data[input.key])}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+
+      {/* BODY */}
+      <div className="p-3">
+        <div className="text-xs text-slate-500">{nodeDef.category}</div>
         
-        {/* Outputs */}
-        {nodeDefinition.outputs.length > 0 && (
-          <div className="mt-4 pt-2 border-t space-y-2">
-            {nodeDefinition.outputs.map((output: any, index: number) => (
-              <div key={output.key} className="relative text-right">
-                <Handle
-                  type="source"
-                  position={Position.Right}
-                  id={output.key}
-                  style={{ 
-                    top: `${20 + (nodeDefinition.inputs.length * 30) + 20 + index * 30}px` 
-                  }}
-                  className="!w-3 !h-3 !bg-blue-500 !border-2 !border-white"
-                />
-                <div className="pr-4 text-xs text-gray-600">{output.label}</div>
-              </div>
-            ))}
+        {/* Show key values if present */}
+        {nodeDef.inputs.length > 0 && (
+          <div className="mt-2 space-y-1">
+            {nodeDef.inputs.slice(0, 2).map((input: any) => {
+              const value = data[input.key]
+              if (value !== undefined && value !== null && value !== '') {
+                return (
+                  <div key={input.key} className="text-xs">
+                    <span className="text-slate-500">{input.label}:</span>
+                    <span className="text-slate-700 ml-1 truncate inline-block max-w-[120px]">
+                      {String(value)}
+                    </span>
+                  </div>
+                )
+              }
+              return null
+            })}
           </div>
         )}
       </div>
+
+      {/* INPUT HANDLES - Dynamically positioned */}
+      {nodeDef.inputs.map((input: any, i: number) => {
+        const totalInputs = nodeDef.inputs.length
+        const verticalPosition = ((i + 1) * 100) / (totalInputs + 1)
+        
+        return (
+          <Handle
+            key={input.key}
+            type="target"
+            position={Position.Left}
+            id={input.key}
+            style={{ top: `${verticalPosition}%` }}
+            className="!w-3 !h-3 !bg-gray-400 !border-2 !border-white hover:!bg-gray-600"
+            title={input.label}
+          />
+        )
+      })}
+
+      {/* OUTPUT HANDLES - Dynamically positioned */}
+      {nodeDef.outputs.map((output: any, i: number) => {
+        const totalOutputs = nodeDef.outputs.length
+        const verticalPosition = ((i + 1) * 100) / (totalOutputs + 1)
+        
+        return (
+          <Handle
+            key={output.key}
+            type="source"
+            position={Position.Right}
+            id={output.key}
+            style={{ top: `${verticalPosition}%` }}
+            className="!w-3 !h-3 !bg-blue-500 !border-2 !border-white hover:!bg-blue-600"
+            title={output.label}
+          />
+        )
+      })}
     </div>
   )
 })

@@ -10,9 +10,11 @@ use std::io::Read;
 use tauri::Manager;
 use tauri_plugin_shell::process::CommandEvent;
 use tauri_plugin_shell::ShellExt;
+use uuid::Uuid;
 
 struct SidecarState {
     port: Option<u16>,
+    auth_token: Option<String>,
 }
 
 #[tauri::command]
@@ -52,7 +54,10 @@ fn find_free_port() -> u16 {
 }
 
 fn main() {
-    let sidecar_state = Arc::new(Mutex::new(SidecarState { port: None }));
+    let sidecar_state = Arc::new(Mutex::new(SidecarState { 
+        port: None,
+        auth_token: None,
+    }));
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -103,6 +108,10 @@ fn main() {
             let port = 3000u16;
             println!("Using port: {}", port);
             
+            // Generate auth token for secure communication
+            let auth_token = Uuid::new_v4().to_string();
+            println!("Generated auth token for secure communication");
+            
             // Spawn the sidecar with security restrictions
             let sidecar_command = app.shell()
                 .sidecar("sequb-server")
@@ -110,20 +119,31 @@ fn main() {
                 .env("PORT", port.to_string())
                 .env("SEQUB_ENV", "development")
                 .env("RUST_LOG", "info")
+                .env("SEQUB_AUTH_TOKEN", auth_token.clone())
                 .spawn()
                 .expect("Failed to spawn sidecar");
             
-            // Update state with port
+            // Update state with port and token
             {
                 let mut state = sidecar_state_clone.lock().unwrap();
                 state.port = Some(port);
+                state.auth_token = Some(auth_token.clone());
             }
             
-            // Emit server-ready event after a short delay to allow server to start
+            // Emit server-ready event with port and token after a short delay
             let window_ready = window.clone();
+            let auth_token_emit = auth_token.clone();
             tauri::async_runtime::spawn(async move {
                 tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-                window_ready.emit("server-ready", port).unwrap();
+                #[derive(serde::Serialize)]
+                struct ServerReadyPayload {
+                    port: u16,
+                    token: String,
+                }
+                window_ready.emit("server-ready", ServerReadyPayload {
+                    port,
+                    token: auth_token_emit,
+                }).unwrap();
             });
             
             // Handle sidecar events
@@ -135,19 +155,41 @@ fn main() {
                 while let Some(event) = rx.recv().await {
                     match event {
                         CommandEvent::Stdout(line) => {
-                            println!("Sidecar stdout: {}", String::from_utf8_lossy(&line));
+                            let output = String::from_utf8_lossy(&line);
+                            println!("Sidecar stdout: {}", output);
+                            
+                            // Forward stdout to frontend for token parsing
+                            window_clone.emit("server-stdout", output.to_string()).unwrap();
                             
                             // Parse port from output if server prints it
-                            let output = String::from_utf8_lossy(&line);
                             if output.contains("Server listening on") {
                                 if let Some(port_str) = output.split(':').last() {
                                     if let Ok(parsed_port) = port_str.trim().parse::<u16>() {
                                         let mut state = sidecar_state_events.lock().unwrap();
                                         state.port = Some(parsed_port);
                                         
-                                        // Notify frontend that server is ready
-                                        window_clone.emit("server-ready", parsed_port).unwrap();
+                                        // Notify frontend that server is ready with auth info
+                                        #[derive(serde::Serialize)]
+                                        struct ServerReadyPayload {
+                                            port: u16,
+                                            token: Option<String>,
+                                        }
+                                        
+                                        let token = state.auth_token.clone();
+                                        window_clone.emit("server-ready", ServerReadyPayload {
+                                            port: parsed_port,
+                                            token,
+                                        }).unwrap();
                                     }
+                                }
+                            }
+                            
+                            // Check for auth token from server output
+                            if output.contains("SEQUB_AUTH_TOKEN=") {
+                                if let Some(token_part) = output.split("SEQUB_AUTH_TOKEN=").nth(1) {
+                                    let token = token_part.trim().to_string();
+                                    let mut state = sidecar_state_events.lock().unwrap();
+                                    state.auth_token = Some(token);
                                 }
                             }
                         }

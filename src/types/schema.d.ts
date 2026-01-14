@@ -5,6 +5,12 @@ export interface NodeInput {
   required?: boolean
   options?: Array<{ value: string; label: string }>
   default?: any
+  // Support for dynamic options fetched from backend
+  dynamicOptions?: {
+    endpoint: string // e.g., "/api/v1/options/slack_channels"
+    dependsOn?: string // e.g., "connection_id" - re-fetch when this input changes
+    cache?: boolean // Whether to cache the fetched options (default: true)
+  }
 }
 
 export interface NodeOutput {

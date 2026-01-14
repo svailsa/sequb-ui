@@ -9,6 +9,14 @@ export async function initializeApiClient() {
   try {
     const port = await invoke<number>('get_server_port')
     API_URL = `http://localhost:${port}`
+    
+    // Use the in-memory token if available
+    if (window.SEQUB_AUTH_TOKEN) {
+      client.defaults.headers.common['x-sequb-auth'] = window.SEQUB_AUTH_TOKEN
+    }
+    
+    // Update the base URL
+    client.defaults.baseURL = API_URL
   } catch (error) {
     console.warn('Could not get server port, using default', error)
   }
@@ -21,12 +29,19 @@ export const client = axios.create({
   },
 })
 
-// Add auth token if server provides one
+// Add auth token from memory (not localStorage for security)
 client.interceptors.request.use((config) => {
-  const authToken = localStorage.getItem('sequb-auth-token')
+  // Prefer in-memory token over localStorage
+  const authToken = window.SEQUB_AUTH_TOKEN || localStorage.getItem('sequb-auth-token')
   if (authToken) {
     config.headers['x-sequb-auth'] = authToken
   }
+  
+  // Ensure we're using the correct base URL
+  if (window.SEQUB_SERVER_PORT) {
+    config.baseURL = `http://localhost:${window.SEQUB_SERVER_PORT}`
+  }
+  
   return config
 })
 
