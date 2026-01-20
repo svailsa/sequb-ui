@@ -1,114 +1,111 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Production builds
+/dist
+/.next/
+/out/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Environment variables
+.env*.local
+.env.production
+
 # Logs
-logs
-*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+.pnpm-debug.log*
 
-# Dependencies
-node_modules
-.pnp
-.pnp.js
+# Runtime data
+*.log
 
-# Build outputs
-dist
-dist-ssr
-build
-out
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-!.vscode/launch.json
-!.vscode/tasks.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-*~
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
-
-# Tauri
-src-tauri/target/
-src-tauri/WixTools/
-src-tauri/Cargo.lock
-
-# Generated binaries
-src-tauri/binaries/
-*.exe
-*.dll
-*.so
-*.dylib
-
-# Testing
-coverage
+# Coverage directory used by tools like istanbul
+coverage/
 *.lcov
-.nyc_output
 
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# OS files
-Thumbs.db
-Desktop.ini
+# OS
+.DS_Store
+.DS_Store?
+._*
 .Spotlight-V100
 .Trashes
+ehthumbs.db
+Thumbs.db
 
-# Package manager
-.npm
-.eslintcache
-.stylelintcache
-.yarn-integrity
-.yarn/*
-!.yarn/releases
-!.yarn/plugins
-!.yarn/sdks
-!.yarn/versions
+# Temporary folders
+tmp/
+temp/
+
+# Next.js
+.next/
+out/
+
+# Vercel
+.vercel
 
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
 
-# Security
-*.pem
-*.key
-*.cert
-*.crt
-sequb-auth-token
-.secrets/
+# Optional npm cache directory
+.npm
 
-# Temporary files
-*.tmp
-*.temp
-.tmp/
-.temp/
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.test
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Gatsby files
+.cache/
+public
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
 tmp/
 temp/
-
-# Debug
-debug.log
-*.stackdump
-
-# Backups
-*.bak
-*.backup
-*.old
-
-# Lock files (keep package-lock.json)
-yarn.lock
-pnpm-lock.yaml

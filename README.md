@@ -1,112 +1,207 @@
 # Sequb UI
 
-Desktop shell for Sequb - a visual workflow automation platform built with Tauri v2 and React.
+A modern web frontend for [Sequb Protocol](../sequb-protocol) - AI workflow orchestration made simple.
 
-## Architecture
+## Overview
 
-Sequb UI is a **Server-Driven UI (SDUI)** that acts as a visual client for the locally running `sequb-server`. The frontend dynamically renders nodes based on a registry fetched from the backend, enabling plugin support without recompiling the UI.
+Sequb UI provides a clean, ChatGPT-like interface for creating and managing AI workflows through natural language interactions. Built with Next.js 14 and TypeScript, it offers a seamless experience for workflow automation.
 
-## Prerequisites
+## Features
 
-- Node.js 18+
-- Rust (for Tauri)
-- `sequb-server` binary from the [sequb-protocol](https://github.com/svailsa/sequb-protocol) repo
+- **Natural Language Workflow Creation**: Chat interface for intuitive workflow design
+- **Backend-Driven Architecture**: Dynamic integration with sequb-protocol APIs
+- **Real-time Updates**: Live execution monitoring and progress tracking  
+- **Modern Design**: Clean, minimal interface inspired by leading AI tools
+- **Responsive Layout**: Works seamlessly on desktop and mobile devices
+- **Type-Safe**: Full TypeScript coverage with strict mode enabled
 
-## Setup
+## Technology Stack
 
-1. **Build the backend server:**
-   ```bash
-   cd ../sequb-protocol
-   cargo build --release --bin sequb-server
-   ```
-
-2. **Copy the server binary to the UI project:**
-   ```bash
-   # Linux/Mac
-   cp ../sequb-protocol/target/release/sequb-server src-tauri/binaries/sequb-server-x86_64-unknown-linux-gnu
-   
-   # Windows
-   cp ../sequb-protocol/target/release/sequb-server.exe src-tauri/binaries/sequb-server-x86_64-pc-windows-msvc.exe
-   
-   # macOS
-   cp ../sequb-protocol/target/release/sequb-server src-tauri/binaries/sequb-server-x86_64-apple-darwin
-   ```
-
-3. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-## Development
-
-### Run in development mode:
-
-**Option 1: Integrated Mode (Recommended)**
-```bash
-npm run tauri:dev
-```
-This starts both the React dev server and Tauri with the sidecar server.
-
-**Option 2: Separate Processes (For debugging)**
-
-Terminal 1 - Backend:
-```bash
-cd ../sequb-protocol
-cargo run --bin sequb-server
-```
-
-Terminal 2 - Frontend:
-```bash
-npm run dev
-```
-
-Terminal 3 - Tauri (optional, for native features):
-```bash
-npm run tauri:dev
-```
-
-## Build
-
-```bash
-npm run tauri:build
-```
-
-This creates a distributable package with the embedded server binary.
+- **Framework**: Next.js 14 with App Router
+- **Language**: TypeScript 5.7+
+- **Styling**: Tailwind CSS with CSS variables
+- **UI Components**: Custom components with shadcn/ui patterns
+- **State Management**: Zustand for client state, TanStack Query for server state
+- **API Client**: Axios with interceptors for auth and error handling
+- **Real-time**: WebSocket integration (planned)
 
 ## Project Structure
 
 ```
-sequb-ui/
-├── src-tauri/          # Tauri backend (Rust)
-│   ├── binaries/       # Sequb server binaries
-│   └── src/main.rs     # Sidecar lifecycle management
-├── src/
-│   ├── features/       # Feature modules
-│   │   ├── canvas/     # Graph canvas with ReactFlow
-│   │   └── properties/ # Dynamic property panels
-│   ├── lib/            # API client and utilities
-│   ├── stores/         # Zustand state management
-│   └── types/          # TypeScript definitions
+src/
+├── app/                    # Next.js App Router
+│   ├── globals.css        # Global styles with CSS variables
+│   ├── layout.tsx         # Root layout with providers
+│   └── page.tsx           # Home page
+├── components/
+│   ├── chat/              # Chat interface components
+│   ├── layout/            # Header, sidebar, navigation
+│   ├── providers/         # React Query and other providers
+│   ├── ui/                # Reusable UI components
+│   └── workflows/         # Workflow-related components
+├── lib/
+│   ├── api.ts             # API client and endpoints
+│   └── utils.ts           # Utility functions
+├── types/
+│   └── sequb.ts           # TypeScript type definitions
+├── hooks/                 # Custom React hooks
+└── stores/                # Zustand stores
 ```
 
-## Key Features
+## Development
 
-- **Server-Driven UI:** Nodes are dynamically rendered based on backend registry
-- **Sidecar Management:** Automatic spawning and lifecycle management of backend server
-- **Visual Workflow Editor:** Drag-and-drop node graph interface
-- **Plugin Support:** Extend functionality through WASM plugins without UI changes
-- **Real-time Execution:** Execute workflows and monitor progress
+### Prerequisites
 
-## API Integration
+- Node.js 18.17+ 
+- npm 9+
+- [sequb-protocol](../sequb-protocol) backend running
 
-The frontend expects the following endpoints from `sequb-server`:
+### Setup
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Configure environment:**
+   ```bash
+   cp .env.example .env.local
+   # Edit .env.local to match your sequb-protocol backend URL
+   ```
+
+3. **Start development server:**
+   ```bash
+   npm run dev
+   ```
+
+4. **Open application:**
+   Visit http://localhost:3000
+
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run typecheck` - Run TypeScript compiler check
+
+## Integration with sequb-protocol
+
+The frontend is designed to integrate seamlessly with the sequb-protocol backend:
+
+### API Integration
+
+- **Base URL**: Configurable via `NEXT_PUBLIC_API_URL` (default: http://localhost:3000)
+- **Authentication**: Bearer token with automatic refresh
+- **Error Handling**: Automatic retry with exponential backoff
+- **Type Safety**: Full TypeScript coverage matching backend schemas
+
+### Key Endpoints
 
 - `GET /api/v1/health` - Health check
-- `GET /api/v1/nodes/registry` - Node definitions for SDUI
-- `GET/POST /api/v1/workflows` - Workflow CRUD operations
-- `POST /api/v1/workflows/{id}/execute` - Execute workflows
-- `GET /api/v1/executions/{id}` - Execution status
+- `GET /api/v1/nodes/registry` - Node type definitions
+- `POST /api/v1/workflows` - Create workflows
+- `POST /api/v1/workflows/:id/execute` - Execute workflows
+- `GET /api/v1/executions/:id` - Monitor execution status
+- `POST /api/v1/chat/message` - Natural language processing
+
+### WebSocket Support (Planned)
+
+Real-time updates for:
+- Execution progress monitoring
+- Live log streaming
+- Approval request notifications
+- System status updates
+
+## Architecture Principles
+
+### Backend-Driven UI
+
+Following the successful pattern from sequb-ios and sequb-android:
+- Dynamic node definitions from `/api/v1/nodes/registry`
+- Server-controlled workflow capabilities
+- Minimal hardcoded frontend logic
+- Easy extensibility without frontend changes
+
+### Chat-First Design
+
+- Natural language as primary interface
+- Visual workflow editor as secondary tool
+- Progressive disclosure of advanced features
+- Focus on user intent over technical details
+
+### Performance Optimizations
+
+- **React Query Caching**: 5-minute stale time for static data
+- **Component Lazy Loading**: Code splitting for better performance
+- **Optimistic Updates**: Immediate UI feedback with rollback on error
+- **Bundle Optimization**: Tree shaking and minimal dependencies
+
+## Deployment
+
+### Development
+
+Run alongside sequb-protocol:
+```bash
+# Terminal 1: Start backend
+cd ../sequb-protocol && cargo run --bin sequb-server
+
+# Terminal 2: Start frontend  
+npm run dev
+```
+
+### Production
+
+1. **Build application:**
+   ```bash
+   npm run build
+   ```
+
+2. **Deploy static files:**
+   The `out/` directory contains static files ready for deployment to any web server.
+
+### Environment Variables
+
+- `NEXT_PUBLIC_API_URL` - Backend API base URL
+- `NEXT_PUBLIC_WS_URL` - WebSocket server URL  
+- `NODE_ENV` - Environment (development/production)
+
+## Comparison with Mobile Apps
+
+This web frontend follows the same architectural principles as the successful iOS and Android applications:
+
+### Shared Concepts
+
+- **Backend-driven UI**: Node definitions from server
+- **Chat interface**: Natural language workflow creation
+- **Real-time updates**: Live execution monitoring
+- **Offline support**: Caching with sync capabilities (planned)
+
+### Web-Specific Features
+
+- **Responsive design**: Works on all screen sizes
+- **Browser integration**: Deep links and bookmark support
+- **Accessibility**: Full keyboard navigation and screen reader support
+- **SEO optimization**: Server-side rendering for public pages
+
+## Contributing
+
+1. Follow TypeScript strict mode - no `any` types
+2. Use provided UI components for consistency
+3. Add proper error handling for all API calls
+4. Include loading states for async operations
+5. Write descriptive commit messages
+6. Test on multiple browsers and screen sizes
+
+## Roadmap
+
+- [ ] **Phase 1**: Basic chat interface with workflow creation (✓ Complete)
+- [ ] **Phase 2**: Visual workflow editor integration
+- [ ] **Phase 3**: Real-time execution monitoring
+- [ ] **Phase 4**: User authentication and multi-tenancy
+- [ ] **Phase 5**: Plugin management interface
+- [ ] **Phase 6**: Advanced features (approvals, webhooks, scheduling)
 
 ## License
 
-See LICENSE in the root repository.
+This project is part of the Sequb Protocol workspace and follows the same MIT OR Apache-2.0 dual license.

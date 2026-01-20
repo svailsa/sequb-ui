@@ -1,199 +1,194 @@
-import axios from 'axios'
-import { Registry, Workflow, ExecutionStatus } from '@/types/schema'
-import { invoke } from '@tauri-apps/api/core'
+import axios, { AxiosError } from 'axios';
+import { 
+  Workflow, 
+  Execution, 
+  Registry, 
+  Plugin, 
+  User, 
+  ExecutionLog,
+  ApprovalRequest,
+  WebhookConfig,
+  ApiResponse,
+  PaginatedResponse 
+} from '@/types/sequb';
 
-// Get port from Tauri backend - default to sequb-protocol standard port
-let API_URL = 'http://localhost:3000'
-
-export async function initializeApiClient() {
-  try {
-    const port = await invoke<number>('get_server_port')
-    API_URL = `http://localhost:${port}`
-    
-    // Use the in-memory token if available
-    if (window.SEQUB_AUTH_TOKEN) {
-      client.defaults.headers.common['x-sequb-auth'] = window.SEQUB_AUTH_TOKEN
-    }
-    
-    // Update the base URL
-    client.defaults.baseURL = API_URL
-  } catch (error) {
-    console.warn('Could not get server port, using default', error)
-  }
-}
-
-export const client = axios.create({
-  baseURL: API_URL,
+// Create axios instance
+export const apiClient = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
   headers: {
     'Content-Type': 'application/json',
   },
-})
+  timeout: 30000,
+});
 
-// Add auth token from memory (not localStorage for security)
-client.interceptors.request.use((config) => {
-  // Prefer in-memory token over localStorage
-  const authToken = window.SEQUB_AUTH_TOKEN || localStorage.getItem('sequb-auth-token')
-  if (authToken) {
-    config.headers['x-sequb-auth'] = authToken
+// Request interceptor for auth
+apiClient.interceptors.request.use((config) => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('sequb_token') : null;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-  
-  // Ensure we're using the correct base URL
-  if (window.SEQUB_SERVER_PORT) {
-    config.baseURL = `http://localhost:${window.SEQUB_SERVER_PORT}`
-  }
-  
-  return config
-})
+  return config;
+});
 
-export const api = {
-  health: {
-    check: () => client.get('/health'),
-  },
-  
-  // The backend doesn't have a registry endpoint yet, so we'll return mock data
-  registry: {
-    get: async () => {
-      // Mock registry data based on the backend node types
-      const mockRegistry: Registry = {
-        nodes: {
-          llm: {
-            id: 'llm',
-            label: 'LLM',
-            category: 'AI',
-            icon: 'brain',
-            inputs: [
-              { key: 'prompt', label: 'Prompt', type: 'textarea', required: true },
-              { key: 'model', label: 'Model', type: 'select', required: true, options: [
-                { value: 'gpt-4', label: 'GPT-4' },
-                { value: 'claude-3', label: 'Claude 3' },
-                { value: 'llama-2', label: 'Llama 2' }
-              ]},
-              { key: 'temperature', label: 'Temperature', type: 'number', required: false, default: 0.7 },
-              { key: 'max_tokens', label: 'Max Tokens', type: 'number', required: false, default: 1000 }
-            ],
-            outputs: [
-              { key: 'response', label: 'Response', type: 'text' },
-              { key: 'usage', label: 'Token Usage', type: 'object' }
-            ],
-          },
-          http: {
-            id: 'http',
-            label: 'HTTP Request',
-            category: 'Network',
-            icon: 'send',
-            inputs: [
-              { key: 'url', label: 'URL', type: 'text', required: true },
-              { key: 'method', label: 'Method', type: 'select', required: true, options: [
-                { value: 'GET', label: 'GET' },
-                { value: 'POST', label: 'POST' },
-                { value: 'PUT', label: 'PUT' },
-                { value: 'DELETE', label: 'DELETE' }
-              ]},
-              { key: 'headers', label: 'Headers', type: 'code', required: false },
-              { key: 'body', label: 'Body', type: 'code', required: false }
-            ],
-            outputs: [
-              { key: 'response', label: 'Response', type: 'object' },
-              { key: 'status', label: 'Status Code', type: 'number' }
-            ],
-          },
-          trigger: {
-            id: 'trigger',
-            label: 'Workflow Trigger',
-            category: 'Control',
-            icon: 'play',
-            inputs: [],
-            outputs: [
-              { key: 'timestamp', label: 'Timestamp', type: 'text' },
-              { key: 'inputs', label: 'Input Data', type: 'object' }
-            ],
-          },
-          condition: {
-            id: 'condition',
-            label: 'Conditional',
-            category: 'Control',
-            icon: 'code',
-            inputs: [
-              { key: 'condition', label: 'Condition', type: 'code', required: true },
-              { key: 'if_true', label: 'If True', type: 'any', required: false },
-              { key: 'if_false', label: 'If False', type: 'any', required: false }
-            ],
-            outputs: [
-              { key: 'result', label: 'Result', type: 'any' }
-            ],
-          },
-          transform: {
-            id: 'transform',
-            label: 'Data Transform',
-            category: 'Data',
-            icon: 'database',
-            inputs: [
-              { key: 'data', label: 'Input Data', type: 'any', required: true },
-              { key: 'expression', label: 'Transform Expression', type: 'code', required: true }
-            ],
-            outputs: [
-              { key: 'result', label: 'Transformed Data', type: 'any' }
-            ],
-          },
-          delay: {
-            id: 'delay',
-            label: 'Delay',
-            category: 'Control',
-            icon: 'terminal',
-            inputs: [
-              { key: 'duration', label: 'Duration (ms)', type: 'number', required: true },
-              { key: 'data', label: 'Pass-through Data', type: 'any', required: false }
-            ],
-            outputs: [
-              { key: 'data', label: 'Pass-through Data', type: 'any' }
-            ],
-          },
-        },
-        plugins: [],
+// Response interceptor for error handling
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError) => {
+    if (error.response?.status === 401) {
+      // Handle unauthorized - redirect to login
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('sequb_token');
+        window.location.href = '/login';
       }
-      
-      return { data: mockRegistry }
-    },
+    }
+    return Promise.reject(error);
+  }
+);
+
+// API endpoints
+export const api = {
+  // Health check
+  health: {
+    check: () => apiClient.get('/api/v1/health'),
   },
-  
-  workflow: {
-    list: () => client.get<Workflow[]>('/workflows'),
-    get: (id: string) => client.get<Workflow>(`/workflows/${id}`),
-    create: (data: { name: string; description?: string; nodes?: any; edges?: any }) => 
-      client.post<{ id: string }>('/workflows', data),
+
+  // Authentication
+  auth: {
+    login: (email: string, password: string) => 
+      apiClient.post('/api/v1/auth/login', { email, password }),
+    register: (email: string, password: string, name?: string) => 
+      apiClient.post('/api/v1/auth/register', { email, password, name }),
+    logout: () => apiClient.post('/api/v1/auth/logout'),
+    refresh: () => apiClient.post('/api/v1/auth/refresh'),
+    profile: () => apiClient.get<ApiResponse<User>>('/api/v1/auth/profile'),
+  },
+
+  // Workflows
+  workflows: {
+    list: (params?: { page?: number; per_page?: number; status?: string }) => 
+      apiClient.get<PaginatedResponse<Workflow>>('/api/v1/workflows', { params }),
+    get: (id: string) => 
+      apiClient.get<ApiResponse<Workflow>>(`/api/v1/workflows/${id}`),
+    create: (data: { name: string; description?: string; graph?: any }) => 
+      apiClient.post<ApiResponse<Workflow>>('/api/v1/workflows', data),
     update: (id: string, data: Partial<Workflow>) => 
-      client.put<Workflow>(`/workflows/${id}`, data),
-    delete: (id: string) => client.delete(`/workflows/${id}`),
+      apiClient.put<ApiResponse<Workflow>>(`/api/v1/workflows/${id}`, data),
+    delete: (id: string) => 
+      apiClient.delete(`/api/v1/workflows/${id}`),
     
     // Graph operations
-    getGraph: (id: string) => client.get(`/workflows/${id}/graph`),
-    saveGraph: (id: string, graph: any) => 
-      client.put(`/workflows/${id}/graph`, graph),
+    getGraph: (id: string) => 
+      apiClient.get<ApiResponse<any>>(`/api/v1/workflows/${id}/graph`),
+    updateGraph: (id: string, graph: any) => 
+      apiClient.put<ApiResponse<any>>(`/api/v1/workflows/${id}/graph`, graph),
     
-    // Workflow operations
+    // Execution
     execute: (id: string, inputs?: Record<string, any>) => 
-      client.post<{ execution_id: string }>(`/workflows/${id}/execute`, inputs ? { inputs } : {}),
-    activate: (id: string) => client.post(`/workflows/${id}/activate`),
-    pause: (id: string) => client.post(`/workflows/${id}/pause`),
-    archive: (id: string) => client.post(`/workflows/${id}/archive`),
-    clone: (id: string, newName: string) => 
-      client.post(`/workflows/${id}/clone`, { new_name: newName }),
+      apiClient.post<ApiResponse<Execution>>(`/api/v1/workflows/${id}/execute`, { inputs }),
+    
+    // Status operations
+    activate: (id: string) => 
+      apiClient.post(`/api/v1/workflows/${id}/activate`),
+    pause: (id: string) => 
+      apiClient.post(`/api/v1/workflows/${id}/pause`),
+    archive: (id: string) => 
+      apiClient.post(`/api/v1/workflows/${id}/archive`),
+    
+    // Versions
+    getVersions: (id: string) => 
+      apiClient.get<PaginatedResponse<Workflow>>(`/api/v1/workflows/${id}/versions`),
+    createVersion: (id: string, name?: string) => 
+      apiClient.post<ApiResponse<Workflow>>(`/api/v1/workflows/${id}/versions`, { name }),
+    
+    // Clone
+    clone: (id: string, name: string) => 
+      apiClient.post<ApiResponse<Workflow>>(`/api/v1/workflows/${id}/clone`, { name }),
   },
-  
-  execution: {
-    getStatus: (id: string) => client.get<ExecutionStatus>(`/executions/${id}`),
-    cancel: (id: string) => client.post(`/executions/${id}/cancel`),
-    approve: (id: string, data: {
-      approval_id: string,
-      approved: boolean,
-      notes?: string,
-      modified_data?: any
-    }) => client.post(`/executions/${id}/approve`, data),
+
+  // Executions
+  executions: {
+    list: (params?: { page?: number; per_page?: number; workflow_id?: string; status?: string }) => 
+      apiClient.get<PaginatedResponse<Execution>>('/api/v1/executions', { params }),
+    get: (id: string) => 
+      apiClient.get<ApiResponse<Execution>>(`/api/v1/executions/${id}`),
+    cancel: (id: string) => 
+      apiClient.post(`/api/v1/executions/${id}/cancel`),
+    
+    // Logs
+    getLogs: (id: string, params?: { page?: number; per_page?: number; level?: string }) => 
+      apiClient.get<PaginatedResponse<ExecutionLog>>(`/api/v1/executions/${id}/logs`, { params }),
+    
+    // Approvals
+    approve: (id: string, approvalId: string, approved: boolean, notes?: string) => 
+      apiClient.post(`/api/v1/executions/${id}/approvals/${approvalId}`, { 
+        approved, 
+        notes 
+      }),
   },
-  
+
+  // Node registry
+  registry: {
+    get: () => 
+      apiClient.get<ApiResponse<Registry>>('/api/v1/nodes/registry'),
+    getCategories: () => 
+      apiClient.get<ApiResponse<string[]>>('/api/v1/nodes/categories'),
+    getNodeType: (type: string) => 
+      apiClient.get<ApiResponse<any>>(`/api/v1/nodes/registry/${type}`),
+  },
+
+  // Plugins
   plugins: {
-    list: () => client.get('/plugins'),
-    load: (path: string) => client.post('/plugins', { path }),
-    unload: (id: string) => client.delete(`/plugins/${id}`),
+    list: () => 
+      apiClient.get<PaginatedResponse<Plugin>>('/api/v1/plugins'),
+    upload: (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return apiClient.post<ApiResponse<Plugin>>('/api/v1/plugins', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    },
+    delete: (id: string) => 
+      apiClient.delete(`/api/v1/plugins/${id}`),
+    activate: (id: string) => 
+      apiClient.post(`/api/v1/plugins/${id}/activate`),
+    deactivate: (id: string) => 
+      apiClient.post(`/api/v1/plugins/${id}/deactivate`),
   },
-}
+
+  // Webhooks
+  webhooks: {
+    list: (workflowId?: string) => 
+      apiClient.get<PaginatedResponse<WebhookConfig>>('/api/v1/webhooks', {
+        params: workflowId ? { workflow_id: workflowId } : undefined
+      }),
+    create: (data: Omit<WebhookConfig, 'id' | 'created_at' | 'updated_at'>) => 
+      apiClient.post<ApiResponse<WebhookConfig>>('/api/v1/webhooks', data),
+    update: (id: string, data: Partial<WebhookConfig>) => 
+      apiClient.put<ApiResponse<WebhookConfig>>(`/api/v1/webhooks/${id}`, data),
+    delete: (id: string) => 
+      apiClient.delete(`/api/v1/webhooks/${id}`),
+  },
+
+  // Approvals
+  approvals: {
+    list: (params?: { page?: number; per_page?: number; status?: string }) => 
+      apiClient.get<PaginatedResponse<ApprovalRequest>>('/api/v1/approvals', { params }),
+    get: (id: string) => 
+      apiClient.get<ApiResponse<ApprovalRequest>>(`/api/v1/approvals/${id}`),
+    respond: (id: string, approved: boolean, notes?: string) => 
+      apiClient.post(`/api/v1/approvals/${id}/respond`, { approved, notes }),
+  },
+
+  // Chat/NLP (if implemented)
+  chat: {
+    sendMessage: (message: string, sessionId?: string) => 
+      apiClient.post<ApiResponse<any>>('/api/v1/chat/message', { 
+        message, 
+        session_id: sessionId 
+      }),
+    getSessions: () => 
+      apiClient.get<PaginatedResponse<any>>('/api/v1/chat/sessions'),
+    createSession: () => 
+      apiClient.post<ApiResponse<any>>('/api/v1/chat/sessions'),
+  },
+};
