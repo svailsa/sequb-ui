@@ -42,8 +42,8 @@ export const useNodeRegistryStore = create<NodeRegistryStore>((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const response = await api.get('/api/v1/nodes/registry');
-      const registryData: Registry = response.data;
+      const response = await api.registry.get();
+      const registryData: Registry = response.data.data;
       
       const nodeTypesArray = Object.values(registryData.node_types);
       const categoriesArray = [...new Set(nodeTypesArray.map(node => node.category))].sort();

@@ -11,10 +11,11 @@ interface CustomNodeData {
   nodeType: NodeType;
   inputs: Record<string, any>;
   label: string;
+  isConfigured?: boolean;
 }
 
 export const CustomNode = memo(({ data, selected, id }: NodeProps<CustomNodeData>) => {
-  const { nodeType, label } = data;
+  const { nodeType, label, isConfigured = false } = data;
 
   const getNodeIcon = (nodeType: NodeType): string => {
     const iconMap: Record<string, string> = {
@@ -95,8 +96,14 @@ export const CustomNode = memo(({ data, selected, id }: NodeProps<CustomNodeData
 
         {/* Configuration Status */}
         <div className="text-xs">
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-muted text-muted-foreground">
-            Not configured
+          <span
+            className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+              isConfigured
+                ? 'bg-green-100 text-green-800 border border-green-200'
+                : 'bg-muted text-muted-foreground'
+            }`}
+          >
+            {isConfigured ? 'Configured' : 'Not configured'}
           </span>
         </div>
       </div>

@@ -19,9 +19,10 @@ import ReactFlow, {
 import { Button } from '@/components/ui/button';
 import { Save, Play, Trash2 } from 'lucide-react';
 import { useNodeRegistryStore } from '@/stores/node-registry-store';
-import { WorkflowNode as SequbWorkflowNode } from '@/types/sequb';
+import { WorkflowNode as SequbWorkflowNode, NodeType } from '@/types/sequb';
 import { NodePalette } from './node-palette';
 import { CustomNode } from './custom-node';
+import { NodeConfigModal } from './node-config-modal';
 
 import 'reactflow/dist/style.css';
 
@@ -41,6 +42,12 @@ export function WorkflowEditor({ workflowId, onSave, onExecute }: WorkflowEditor
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance>();
   const [isSaving, setIsSaving] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
+  
+  // Node configuration modal state
+  const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedNodeType, setSelectedNodeType] = useState<NodeType | null>(null);
+  const [selectedNodeConfig, setSelectedNodeConfig] = useState<Record<string, any>>({});
   
   const { getNodeType } = useNodeRegistryStore();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
@@ -86,6 +93,7 @@ export function WorkflowEditor({ workflowId, onSave, onExecute }: WorkflowEditor
           nodeType: nodeType,
           inputs: {},
           label: nodeType.name,
+          isConfigured: false,
         },
       };
 
@@ -95,9 +103,36 @@ export function WorkflowEditor({ workflowId, onSave, onExecute }: WorkflowEditor
   );
 
   const onNodeDoubleClick: NodeMouseHandler = useCallback((event, node) => {
-    // Open node configuration modal
-    console.log('Double clicked node:', node);
+    const nodeType = node.data.nodeType;
+    if (nodeType) {
+      setSelectedNodeId(node.id);
+      setSelectedNodeType(nodeType);
+      setSelectedNodeConfig(node.data.inputs || {});
+      setConfigModalOpen(true);
+    }
   }, []);
+
+  const handleNodeConfigSave = useCallback((config: Record<string, any>) => {
+    if (selectedNodeId) {
+      setNodes((nds) =>
+        nds.map((node) =>
+          node.id === selectedNodeId
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  inputs: config,
+                  isConfigured: Object.keys(config).length > 0,
+                }
+              }
+            : node
+        )
+      );
+    }
+    setSelectedNodeId(null);
+    setSelectedNodeType(null);
+    setSelectedNodeConfig({});
+  }, [selectedNodeId, setNodes]);
 
   const handleSave = async () => {
     if (!onSave) return;
@@ -226,6 +261,17 @@ export function WorkflowEditor({ workflowId, onSave, onExecute }: WorkflowEditor
           </div>
         </div>
       </div>
+
+      {/* Node Configuration Modal */}
+      {selectedNodeType && (
+        <NodeConfigModal
+          open={configModalOpen}
+          onOpenChange={setConfigModalOpen}
+          nodeType={selectedNodeType}
+          initialValues={selectedNodeConfig}
+          onSave={handleNodeConfigSave}
+        />
+      )}
     </div>
   );
 }

@@ -36,11 +36,13 @@ export const useChatStore = create<ChatStore>()(
 
       createSession: async (title?: string) => {
         try {
-          const response = await api.post('/api/v1/chat/sessions', {
-            title: title || `Chat ${new Date().toLocaleDateString()}`
-          });
+          const response = await api.chat.createSession();
           
-          const newSession = response.data;
+          const newSession = {
+            ...response.data.data,
+            title: title || `Chat ${new Date().toLocaleDateString()}`
+          };
+          
           set(state => ({
             sessions: [newSession, ...state.sessions],
             currentSessionId: newSession.id,
@@ -71,8 +73,8 @@ export const useChatStore = create<ChatStore>()(
 
       loadSessions: async () => {
         try {
-          const response = await api.get('/api/v1/chat/sessions');
-          set({ sessions: response.data || [] });
+          const response = await api.chat.getSessions();
+          set({ sessions: response.data.data || [] });
         } catch (error) {
           console.error('Failed to load sessions:', error);
           // Keep local sessions if backend is unavailable
@@ -81,10 +83,10 @@ export const useChatStore = create<ChatStore>()(
 
       switchSession: async (sessionId: string) => {
         try {
-          const response = await api.get(`/api/v1/chat/sessions/${sessionId}/messages`);
+          const response = await api.chat.getMessages(sessionId);
           set({
             currentSessionId: sessionId,
-            messages: response.data || []
+            messages: response.data.data || []
           });
         } catch (error) {
           console.error('Failed to load session messages:', error);
@@ -98,7 +100,7 @@ export const useChatStore = create<ChatStore>()(
 
       deleteSession: async (sessionId: string) => {
         try {
-          await api.delete(`/api/v1/chat/sessions/${sessionId}`);
+          await api.chat.deleteSession(sessionId);
         } catch (error) {
           console.error('Failed to delete session from backend:', error);
         }
@@ -119,7 +121,7 @@ export const useChatStore = create<ChatStore>()(
 
       updateSessionTitle: async (sessionId: string, title: string) => {
         try {
-          await api.patch(`/api/v1/chat/sessions/${sessionId}`, { title });
+          await api.chat.updateSession(sessionId, { title });
         } catch (error) {
           console.error('Failed to update session title:', error);
         }
@@ -167,18 +169,15 @@ export const useChatStore = create<ChatStore>()(
         set({ isLoading: true });
 
         try {
-          const response = await api.post(`/api/v1/chat/sessions/${currentSessionId}/messages`, {
-            content,
-            role: 'user'
-          });
+          const response = await api.chat.sendMessage(content, currentSessionId);
 
           // The backend should return the assistant's response
-          if (response.data.assistant_response) {
+          if (response.data.data?.content) {
             const assistantMessage: ChatMessage = {
               id: (Date.now() + 1).toString(),
               session_id: currentSessionId,
               role: 'assistant',
-              content: response.data.assistant_response.content,
+              content: response.data.data.content,
               timestamp: new Date().toISOString(),
             };
             addMessage(assistantMessage);

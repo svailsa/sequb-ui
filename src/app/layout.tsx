@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { WebSocketProvider } from "@/components/providers/websocket-provider";
+import { I18nProvider } from "@/providers/i18n-provider";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -20,9 +22,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn(inter.className, "antialiased")}>
-        <QueryProvider>
-          {children}
-        </QueryProvider>
+        <I18nProvider>
+          <QueryProvider>
+            <WebSocketProvider>
+              {children}
+            </WebSocketProvider>
+          </QueryProvider>
+        </I18nProvider>
       </body>
     </html>
   );

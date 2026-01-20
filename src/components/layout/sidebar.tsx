@@ -85,7 +85,7 @@ export function Sidebar() {
               className="w-full justify-start"
               onClick={() => {
                 setActiveItem(item.href);
-                router.push(item.href);
+                router.push(item.href as any);
               }}
             >
               <item.icon className="mr-2 h-4 w-4" />

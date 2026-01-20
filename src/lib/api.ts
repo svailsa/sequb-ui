@@ -190,5 +190,13 @@ export const api = {
       apiClient.get<PaginatedResponse<any>>('/api/v1/chat/sessions'),
     createSession: () => 
       apiClient.post<ApiResponse<any>>('/api/v1/chat/sessions'),
+    getSession: (id: string) =>
+      apiClient.get<ApiResponse<any>>(`/api/v1/chat/sessions/${id}`),
+    getMessages: (sessionId: string) =>
+      apiClient.get<PaginatedResponse<any>>(`/api/v1/chat/sessions/${sessionId}/messages`),
+    deleteSession: (id: string) =>
+      apiClient.delete(`/api/v1/chat/sessions/${id}`),
+    updateSession: (id: string, data: { title?: string }) =>
+      apiClient.patch<ApiResponse<any>>(`/api/v1/chat/sessions/${id}`, data),
   },
 };
