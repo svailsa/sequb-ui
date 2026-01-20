@@ -8,12 +8,15 @@ Sequb UI is a browser-based interface for creating and managing workflows. It pr
 
 ## Features
 
-- **Chat Interface**: Modern ChatGPT-style interface with session management and history
-- **Visual Workflow Editor**: Drag-and-drop workflow builder with React Flow integration
-- **Dynamic Node Registry**: Live loading of node types from backend with fallback support
-- **Backend Integration**: Complete API client for sequb-protocol endpoints
-- **Responsive Design**: Mobile-first design that works across all device sizes
-- **TypeScript**: Strict type safety throughout the application
+- **Chat Interface**: Chat interface with session management and history
+- **Visual Workflow Editor**: Drag-and-drop workflow builder using React Flow
+- **Dynamic Node Registry**: Loading of node types from backend with fallback support
+- **Real-time Updates**: WebSocket integration for execution monitoring
+- **Internationalization**: Support for 8 languages including RTL (Arabic, Urdu)
+- **Authentication**: Login/register pages with MFA/TOTP support
+- **Plugin System**: Plugin upload and management interface
+- **Backend Integration**: API client for sequb-protocol endpoints
+- **TypeScript**: Type safety with strict mode
 - **State Management**: Zustand stores with localStorage persistence and React Query caching
 
 ## Technology Stack
@@ -30,20 +33,35 @@ Sequb UI is a browser-based interface for creating and managing workflows. It pr
 
 ```
 src/
-├── app/                    # Next.js App Router
+├── app/                    # Next.js App Router pages
+│   ├── approvals/         # Approval management page
+│   ├── executions/        # Execution monitoring page  
+│   ├── login/             # Authentication login page
+│   ├── metrics/           # Metrics dashboard page
+│   ├── register/          # User registration page
+│   ├── settings/          # User settings page
+│   ├── templates/         # Template library page
+│   ├── webhooks/          # Webhook management page
 │   ├── workflows/         # Workflow editor page
-│   ├── globals.css        # Global styles with CSS variables
-│   ├── layout.tsx         # Root layout with providers
 │   └── page.tsx           # Home page with chat interface
 ├── components/
+│   ├── auth/              # Authentication components (MFA, guards)
 │   ├── chat/              # Chat interface and history sidebar
+│   ├── execution/         # Execution list and details
 │   ├── layout/            # Header, sidebar with dynamic node registry
-│   ├── providers/         # React Query providers
+│   ├── plugin/            # Plugin manager and upload
+│   ├── providers/         # React providers (Query, WebSocket, i18n)
+│   ├── settings/          # Settings and preferences components
+│   ├── template/          # Template gallery components
 │   ├── ui/                # Reusable UI components
-│   └── workflow/          # Workflow editor, node palette, custom nodes
+│   └── workflow/          # Workflow editor, node palette, config modal
 ├── lib/
 │   ├── api.ts             # API client and endpoints
-│   └── utils.ts           # Utility functions
+│   ├── i18n.ts            # Internationalization service
+│   ├── utils.ts           # Utility functions
+│   └── websocket.ts       # WebSocket service
+├── providers/
+│   └── i18n-provider.tsx  # i18n React context provider
 ├── types/
 │   └── sequb.ts           # TypeScript type definitions
 ├── hooks/                 # Custom React hooks
@@ -100,7 +118,7 @@ The frontend is designed to integrate seamlessly with the sequb-protocol backend
 
 ### API Endpoints
 
-The frontend includes a complete API client with endpoints for:
+The frontend includes an API client with endpoints for:
 - Health checks (`/api/v1/health`)
 - Chat sessions and messages (`/api/v1/chat/*`) 
 - Workflow operations (`/api/v1/workflows/*`)
@@ -108,25 +126,30 @@ The frontend includes a complete API client with endpoints for:
 - Dynamic node registry (`/api/v1/nodes/registry`)
 - Authentication (`/api/v1/auth/*`)
 - Plugin management (`/api/v1/plugins/*`)
+- Approval workflows (`/api/v1/approvals/*`)
+- Webhook configuration (`/api/v1/webhooks/*`)
+- Internationalization (`/api/v1/i18n/*`)
+- WebSocket connections (`/api/v1/ws/*`)
 
-The frontend implements graceful fallback behavior with mock data when the backend is unavailable.
+The frontend includes fallback to mock data when the backend is unavailable.
 
 ## Architecture Principles
 
 ### Design Principles
 
 - **Backend-Driven**: Node definitions and configuration loaded from server registry
-- **Modern UI**: ChatGPT-style interface patterns with visual workflow editing
-- **Type Safety**: Strict TypeScript throughout with comprehensive type coverage
-- **Graceful Degradation**: Fallback to mock data when backend unavailable
+- **Type Safety**: TypeScript with strict mode enabled
+- **Fallback Support**: Mock data when backend unavailable
 - **State Persistence**: Chat history and user preferences saved locally
+- **Internationalization**: Multi-language support with RTL capabilities
 
-### Performance Features
+### Technical Features
 
-- **TanStack Query**: Server state caching with intelligent invalidation
-- **Code Splitting**: Next.js automatic bundle optimization
-- **Error Handling**: Comprehensive retry logic with exponential backoff
-- **Optimistic Updates**: Immediate UI updates with server synchronization
+- **TanStack Query**: Server state caching and invalidation
+- **Code Splitting**: Next.js bundle optimization
+- **Error Handling**: Retry logic with exponential backoff
+- **WebSocket Integration**: Real-time updates for executions
+- **Form Validation**: Input validation with error feedback
 
 ## Deployment
 
@@ -162,25 +185,24 @@ npm run dev
 ## Current Status
 
 ### Implemented Features
-- **Chat Interface**: Modern ChatGPT-style interface with session management
-- **Chat History**: Persistent session storage with CRUD operations  
-- **Visual Workflow Editor**: React Flow-based drag-and-drop workflow builder
-- **Dynamic Node Registry**: Live loading from backend with comprehensive fallback
-- **Node Palette**: Searchable, categorized node library with drag-and-drop
-- **API Integration**: Complete client with error handling and retry logic
-- **Responsive Design**: Mobile-first layout that adapts to all screen sizes
-- **Type Safety**: Comprehensive TypeScript coverage throughout
+- **Core Pages**: All main application pages (chat, workflows, executions, templates, settings, etc.)
+- **Chat Interface**: Chat interface with session management and history persistence
+- **Workflow Editor**: React Flow-based drag-and-drop workflow builder with node configuration
+- **Node Registry**: Dynamic loading from backend with mock data fallback
+- **Authentication**: Login/register pages with MFA/TOTP setup components
+- **Internationalization**: 8 language support with language selector
+- **WebSocket Integration**: Real-time updates for execution monitoring
+- **Plugin System**: Plugin upload and management interface
+- **Approval Workflows**: Approval request handling and response UI
+- **Webhook Management**: CRUD operations for webhook configuration
+- **Metrics Dashboard**: Performance monitoring and statistics visualization
+- **API Integration**: Client covering all backend endpoints with error handling
 
-### In Progress
-- Dynamic form generation for node configuration
-- WebSocket integration for real-time updates
-- Additional management pages (executions, templates, settings)
-
-### Not Yet Implemented
-- User authentication and authorization flows
-- Real-time execution monitoring and logs
-- Plugin management interface
-- Advanced workflow features (versioning, approval workflows)
+### Backend Integration Status
+- API client connects to backend when available
+- Fallback to mock data for development without backend
+- WebSocket connection for real-time updates
+- JWT authentication with token management
 
 ## Contributing
 
@@ -193,17 +215,15 @@ npm run dev
 
 ## Development Roadmap
 
-### Next Steps
-- Complete dynamic form generation for node configuration
-- Implement WebSocket integration for real-time updates
-- Add user authentication and authorization flows
-- Build execution monitoring and management pages
-
-### Future Features
-- Advanced workflow operations (versioning, branching, approval workflows)
-- Plugin management and custom node development
-- Collaboration features and workspace sharing
-- Performance analytics and workflow optimization tools
+### Potential Enhancements
+- Enhanced workflow versioning and branching
+- Collaborative editing features
+- Advanced analytics and reporting
+- Mobile application development
+- Offline mode support
+- Custom node development SDK
+- Enterprise SSO integration
+- Advanced permission management
 
 ## License
 
