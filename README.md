@@ -1,19 +1,19 @@
 # Sequb UI
 
-A modern web frontend for [Sequb Protocol](../sequb-protocol) - AI workflow orchestration made simple.
+A web frontend for [Sequb Protocol](../sequb-protocol) workflow orchestration system.
 
 ## Overview
 
-Sequb UI provides a clean, ChatGPT-like interface for creating and managing AI workflows through natural language interactions. Built with Next.js 14 and TypeScript, it offers a seamless experience for workflow automation.
+Sequb UI is a browser-based interface for creating and managing workflows. It provides a chat interface for natural language interactions and traditional workflow management tools. Built with Next.js 14 and TypeScript.
 
 ## Features
 
-- **Natural Language Workflow Creation**: Chat interface for intuitive workflow design
-- **Backend-Driven Architecture**: Dynamic integration with sequb-protocol APIs
-- **Real-time Updates**: Live execution monitoring and progress tracking  
-- **Modern Design**: Clean, minimal interface inspired by leading AI tools
-- **Responsive Layout**: Works seamlessly on desktop and mobile devices
-- **Type-Safe**: Full TypeScript coverage with strict mode enabled
+- **Chat Interface**: Natural language workflow creation through conversational UI
+- **Backend Integration**: API client for sequb-protocol endpoints
+- **Responsive Design**: Works on desktop and mobile browsers
+- **TypeScript**: Type-safe development with strict mode
+- **Component-based UI**: Reusable components with Tailwind CSS styling
+- **Development Tools**: ESLint, TypeScript checking, and hot reload
 
 ## Technology Stack
 
@@ -23,7 +23,7 @@ Sequb UI provides a clean, ChatGPT-like interface for creating and managing AI w
 - **UI Components**: Custom components with shadcn/ui patterns
 - **State Management**: Zustand for client state, TanStack Query for server state
 - **API Client**: Axios with interceptors for auth and error handling
-- **Real-time**: WebSocket integration (planned)
+- **Real-time**: WebSocket support (not implemented)
 
 ## Project Structure
 
@@ -96,46 +96,32 @@ The frontend is designed to integrate seamlessly with the sequb-protocol backend
 - **Error Handling**: Automatic retry with exponential backoff
 - **Type Safety**: Full TypeScript coverage matching backend schemas
 
-### Key Endpoints
+### API Endpoints
 
-- `GET /api/v1/health` - Health check
-- `GET /api/v1/nodes/registry` - Node type definitions
-- `POST /api/v1/workflows` - Create workflows
-- `POST /api/v1/workflows/:id/execute` - Execute workflows
-- `GET /api/v1/executions/:id` - Monitor execution status
-- `POST /api/v1/chat/message` - Natural language processing
+The frontend includes an API client with endpoints for:
+- Health checks (`/api/v1/health`)
+- Workflow operations (`/api/v1/workflows/*`)
+- Execution monitoring (`/api/v1/executions/*`)
+- Node registry access (`/api/v1/nodes/registry`)
+- Authentication (`/api/v1/auth/*`)
+- Plugin management (`/api/v1/plugins/*`)
 
-### WebSocket Support (Planned)
-
-Real-time updates for:
-- Execution progress monitoring
-- Live log streaming
-- Approval request notifications
-- System status updates
+Note: Backend integration requires a running sequb-protocol server.
 
 ## Architecture Principles
 
-### Backend-Driven UI
+### Design Principles
 
-Following the successful pattern from sequb-ios and sequb-android:
-- Dynamic node definitions from `/api/v1/nodes/registry`
-- Server-controlled workflow capabilities
-- Minimal hardcoded frontend logic
-- Easy extensibility without frontend changes
+- **Backend-Driven**: Node definitions loaded from server registry
+- **Chat Interface**: Primary interaction through conversational UI
+- **Type Safety**: TypeScript throughout the application
+- **Component Reuse**: Modular UI components with consistent styling
 
-### Chat-First Design
+### Performance Features
 
-- Natural language as primary interface
-- Visual workflow editor as secondary tool
-- Progressive disclosure of advanced features
-- Focus on user intent over technical details
-
-### Performance Optimizations
-
-- **React Query Caching**: 5-minute stale time for static data
-- **Component Lazy Loading**: Code splitting for better performance
-- **Optimistic Updates**: Immediate UI feedback with rollback on error
-- **Bundle Optimization**: Tree shaking and minimal dependencies
+- **TanStack Query**: Server state caching with 5-minute stale time
+- **Code Splitting**: Next.js automatic bundle optimization
+- **Error Handling**: Retry logic for failed API requests
 
 ## Deployment
 
@@ -157,8 +143,10 @@ npm run dev
    npm run build
    ```
 
-2. **Deploy static files:**
-   The `out/` directory contains static files ready for deployment to any web server.
+2. **Start production server:**
+   ```bash
+   npm run start
+   ```
 
 ### Environment Variables
 
@@ -166,23 +154,21 @@ npm run dev
 - `NEXT_PUBLIC_WS_URL` - WebSocket server URL  
 - `NODE_ENV` - Environment (development/production)
 
-## Comparison with Mobile Apps
+## Current Status
 
-This web frontend follows the same architectural principles as the successful iOS and Android applications:
+### Implemented
+- Basic chat interface with message handling
+- Responsive layout with sidebar navigation
+- API client with full endpoint coverage
+- TypeScript type definitions
+- Component structure and styling
 
-### Shared Concepts
-
-- **Backend-driven UI**: Node definitions from server
-- **Chat interface**: Natural language workflow creation
-- **Real-time updates**: Live execution monitoring
-- **Offline support**: Caching with sync capabilities (planned)
-
-### Web-Specific Features
-
-- **Responsive design**: Works on all screen sizes
-- **Browser integration**: Deep links and bookmark support
-- **Accessibility**: Full keyboard navigation and screen reader support
-- **SEO optimization**: Server-side rendering for public pages
+### Not Implemented
+- Real backend integration (uses mock responses)
+- User authentication
+- Visual workflow editor
+- Real-time execution monitoring
+- WebSocket connections
 
 ## Contributing
 
@@ -193,14 +179,19 @@ This web frontend follows the same architectural principles as the successful iO
 5. Write descriptive commit messages
 6. Test on multiple browsers and screen sizes
 
-## Roadmap
+## Development Roadmap
 
-- [ ] **Phase 1**: Basic chat interface with workflow creation (✓ Complete)
-- [ ] **Phase 2**: Visual workflow editor integration
-- [ ] **Phase 3**: Real-time execution monitoring
-- [ ] **Phase 4**: User authentication and multi-tenancy
-- [ ] **Phase 5**: Plugin management interface
-- [ ] **Phase 6**: Advanced features (approvals, webhooks, scheduling)
+### Next Steps
+- Connect to sequb-protocol backend server
+- Implement real workflow creation from chat
+- Add user authentication flow
+- Build execution monitoring interface
+
+### Future Features
+- Visual workflow editor
+- Real-time updates via WebSocket
+- Plugin management
+- Advanced workflow operations
 
 ## License
 
