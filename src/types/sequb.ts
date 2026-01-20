@@ -185,6 +185,7 @@ export interface ErrorResponse {
 // Chat interface types
 export interface ChatMessage {
   id: string;
+  session_id?: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
@@ -197,8 +198,8 @@ export interface ChatMessage {
 
 export interface ChatSession {
   id: string;
-  title?: string;
-  messages: ChatMessage[];
+  title: string;
+  message_count: number;
   created_at: string;
   updated_at: string;
 }

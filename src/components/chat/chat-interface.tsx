@@ -1,26 +1,23 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Send, Bot, User } from "lucide-react";
+import { Send, Bot, User, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ChatMessage } from "@/types/sequb";
-
-// Mock initial message
-const initialMessage: ChatMessage = {
-  id: "1",
-  role: "assistant",
-  content: "Hello! I'm your Sequb AI assistant. I can help you create and manage workflows using natural language. Try asking me something like:\n\n• \"Create a workflow that sends me a daily weather report\"\n• \"Set up an automation to backup my photos weekly\"\n• \"Build a workflow that summarizes my emails\"\n\nWhat would you like to build today?",
-  timestamp: new Date().toISOString(),
-};
+import { useChatStore } from "@/stores/chat-store";
 
 export function ChatInterface() {
-  const [messages, setMessages] = useState<ChatMessage[]>([initialMessage]);
-  const [inputValue, setInputValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const {
+    messages,
+    isLoading,
+    currentSessionId,
+    sendMessage,
+    createSession,
+    getCurrentSession
+  } = useChatStore();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -30,31 +27,26 @@ export function ChatInterface() {
     scrollToBottom();
   }, [messages]);
 
+  // Initialize with a session if none exists
+  useEffect(() => {
+    if (!currentSessionId) {
+      createSession();
+    }
+  }, [currentSessionId, createSession]);
+
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+    const inputValue = textareaRef.current?.value.trim();
+    if (!inputValue || isLoading) return;
 
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: "user",
-      content: inputValue,
-      timestamp: new Date().toISOString(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInputValue("");
-    setIsLoading(true);
-
-    // Simulate AI response (replace with actual API call)
-    setTimeout(() => {
-      const aiResponse: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: `I understand you want to: "${inputValue}". Let me help you create a workflow for that.\n\nI'm working on setting up the backend integration. For now, this is a placeholder response. Soon I'll be able to:\n\n• Analyze your request\n• Suggest appropriate workflow nodes\n• Create and execute workflows\n• Monitor execution progress\n\nStay tuned for full functionality!`,
-        timestamp: new Date().toISOString(),
-      };
-      setMessages(prev => [...prev, aiResponse]);
-      setIsLoading(false);
-    }, 1000);
+    try {
+      await sendMessage(inputValue);
+      if (textareaRef.current) {
+        textareaRef.current.value = '';
+        textareaRef.current.style.height = 'auto';
+      }
+    } catch (error) {
+      console.error('Failed to send message:', error);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -64,101 +56,174 @@ export function ChatInterface() {
     }
   };
 
-  return (
-    <div className="flex flex-col h-full max-w-4xl mx-auto">
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={cn(
-              "flex items-start space-x-3",
-              message.role === "user" && "flex-row-reverse space-x-reverse"
-            )}
-          >
-            {/* Avatar */}
-            <div className={cn(
-              "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
-              message.role === "assistant" 
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground"
-            )}>
-              {message.role === "assistant" ? (
-                <Bot className="w-4 h-4" />
-              ) : (
-                <User className="w-4 h-4" />
-              )}
-            </div>
+  const adjustTextareaHeight = (textarea: HTMLTextAreaElement) => {
+    textarea.style.height = 'auto';
+    const maxHeight = 200; // Maximum height in pixels
+    const newHeight = Math.min(textarea.scrollHeight, maxHeight);
+    textarea.style.height = `${newHeight}px`;
+  };
 
-            {/* Message content */}
-            <div className={cn(
-              "flex-1 max-w-3xl",
-              message.role === "user" && "flex justify-end"
-            )}>
-              <div className={cn(
-                "px-4 py-3 rounded-lg",
-                message.role === "assistant"
-                  ? "bg-muted text-foreground"
-                  : "bg-primary text-primary-foreground"
-              )}>
-                <div className="whitespace-pre-wrap text-sm">
-                  {message.content}
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    adjustTextareaHeight(e.target);
+  };
+
+  const newChatHandler = async () => {
+    await createSession();
+    if (textareaRef.current) {
+      textareaRef.current.value = '';
+      textareaRef.current.style.height = 'auto';
+    }
+  };
+
+  const fillInput = (text: string) => {
+    if (textareaRef.current) {
+      textareaRef.current.value = text;
+      adjustTextareaHeight(textareaRef.current);
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-full w-full">
+      {/* Header with New Chat button */}
+      {messages.length > 0 && (
+        <div className="border-b border-border px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Bot className="w-5 h-5 text-primary" />
+            <span className="font-medium">Sequb Assistant</span>
+          </div>
+          <Button variant="outline" size="sm" onClick={newChatHandler}>
+            <Plus className="w-4 h-4 mr-2" />
+            New Chat
+          </Button>
+        </div>
+      )}
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto">
+        {messages.length === 0 ? (
+          // Welcome screen
+          <div className="flex items-center justify-center h-full px-4">
+            <div className="text-center max-w-md space-y-6">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                <Bot className="w-8 h-8 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <h1 className="text-2xl font-semibold">Welcome to Sequb</h1>
+                <p className="text-muted-foreground">
+                  I can help you create and manage workflows using natural language. 
+                  Start by describing what you want to automate.
+                </p>
+              </div>
+              <div className="grid gap-3 text-sm">
+                <div className="p-3 border border-border rounded-lg text-left hover:bg-muted/50 cursor-pointer transition-colors"
+                     onClick={() => fillInput("Create a workflow that sends me a daily weather report")}>
+                  <div className="font-medium">📧 Daily Weather Report</div>
+                  <div className="text-muted-foreground">Get weather updates delivered to your inbox</div>
+                </div>
+                <div className="p-3 border border-border rounded-lg text-left hover:bg-muted/50 cursor-pointer transition-colors"
+                     onClick={() => fillInput("Set up an automation to backup my photos weekly")}>
+                  <div className="font-medium">📸 Photo Backup</div>
+                  <div className="text-muted-foreground">Automatically backup photos on a schedule</div>
+                </div>
+                <div className="p-3 border border-border rounded-lg text-left hover:bg-muted/50 cursor-pointer transition-colors"
+                     onClick={() => fillInput("Build a workflow that summarizes my emails")}>
+                  <div className="font-medium">📨 Email Summarizer</div>
+                  <div className="text-muted-foreground">Get AI-powered summaries of your emails</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          // Chat messages
+          <div className="space-y-4 px-4 py-6 max-w-4xl mx-auto w-full">
+            {messages.map((message) => (
+              <div key={message.id} className="space-y-2">
+                <div className={cn(
+                  "flex items-center space-x-2 text-sm",
+                  message.role === "user" ? "justify-end" : "justify-start"
+                )}>
+                  {message.role === "assistant" && (
+                    <>
+                      <Bot className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Assistant</span>
+                    </>
+                  )}
+                  {message.role === "user" && (
+                    <>
+                      <span className="font-medium">You</span>
+                      <User className="w-4 h-4" />
+                    </>
+                  )}
                 </div>
                 <div className={cn(
-                  "text-xs mt-2 opacity-70",
-                  message.role === "assistant" ? "text-muted-foreground" : "text-primary-foreground"
+                  "prose prose-sm max-w-none",
+                  message.role === "user" ? "ml-auto max-w-2xl" : "mr-auto max-w-4xl"
                 )}>
-                  {new Date(message.timestamp).toLocaleTimeString()}
+                  <div className={cn(
+                    "rounded-xl px-4 py-3",
+                    message.role === "assistant"
+                      ? "bg-muted/50"
+                      : "bg-primary text-primary-foreground ml-auto"
+                  )}>
+                    <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                      {message.content}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        ))}
+            ))}
 
-        {/* Loading indicator */}
-        {isLoading && (
-          <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-              <Bot className="w-4 h-4" />
-            </div>
-            <div className="bg-muted px-4 py-3 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+            {/* Loading indicator */}
+            {isLoading && (
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2 text-sm">
+                  <Bot className="w-4 h-4 text-primary" />
+                  <span className="font-medium">Assistant</span>
+                </div>
+                <div className="bg-muted/50 rounded-xl px-4 py-3 max-w-fit">
+                  <div className="flex items-center space-x-1">
+                    <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-pulse" style={{ animationDelay: "0ms" }}></div>
+                    <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-pulse" style={{ animationDelay: "200ms" }}></div>
+                    <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-pulse" style={{ animationDelay: "400ms" }}></div>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
-
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input area */}
-      <div className="border-t border-border p-6">
-        <div className="flex items-end space-x-3 max-w-4xl mx-auto">
-          <div className="flex-1">
-            <Input
-              ref={inputRef}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Describe the workflow you want to create..."
-              disabled={isLoading}
-              className="min-h-[44px] py-3"
-            />
+      <div className="border-t border-border px-4 py-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="relative flex items-end space-x-3 bg-background border border-border rounded-xl shadow-sm">
+            <div className="flex-1 p-3">
+              <textarea
+                ref={textareaRef}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyPress}
+                placeholder="Message Sequb..."
+                disabled={isLoading}
+                rows={1}
+                className="w-full resize-none border-0 bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-0 max-h-[200px] overflow-y-auto"
+                style={{ minHeight: '20px' }}
+              />
+            </div>
+            <div className="p-2">
+              <Button 
+                onClick={handleSendMessage}
+                disabled={isLoading}
+                size="sm"
+                className="rounded-lg"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
-          <Button 
-            onClick={handleSendMessage}
-            disabled={!inputValue.trim() || isLoading}
-            size="lg"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
-        </div>
-        
-        <div className="text-xs text-muted-foreground text-center mt-3">
-          Powered by Sequb Protocol • Your data is processed securely
+          <div className="text-xs text-muted-foreground text-center mt-2">
+            Sequb can make mistakes. Check important info.
+          </div>
         </div>
       </div>
     </div>

@@ -7,9 +7,9 @@ Sequb UI is a web frontend for the Sequb Protocol workflow orchestration system.
 ## Current Status
 
 **Architecture**: Next.js 14 with App Router, TypeScript, and Tailwind CSS
-**Development Stage**: Initial implementation complete
-**Backend Integration**: API client implemented, requires connection to running sequb-protocol server
-**Key Features Implemented**: Basic chat interface, responsive layout, component structure
+**Development Stage**: Core features implemented with backend integration
+**Backend Integration**: Complete API client with graceful fallback to mock data
+**Key Features Implemented**: ChatGPT-style chat interface with history, visual workflow editor, dynamic node registry
 
 ## Technology Stack
 
@@ -25,7 +25,7 @@ Sequb UI is a web frontend for the Sequb Protocol workflow orchestration system.
 
 ### State Management
 - **TanStack Query**: For server state management and caching
-- **Zustand**: Ready for client-side state (not yet implemented)
+- **Zustand**: Implemented for chat sessions and node registry state
 
 ### API Integration
 - **Axios**: HTTP client with interceptors
@@ -45,8 +45,9 @@ sequb-ui/
 │   │   ├── layout.tsx         # Root layout with providers
 │   │   └── page.tsx           # Home page component
 │   ├── components/
-│   │   ├── chat/              # Chat interface components
-│   │   │   └── chat-interface.tsx
+│   │   ├── chat/              # Chat interface and history components
+│   │   │   ├── chat-interface.tsx
+│   │   │   └── chat-history-sidebar.tsx
 │   │   ├── layout/            # Layout components
 │   │   │   ├── header.tsx
 │   │   │   └── sidebar.tsx
@@ -55,14 +56,19 @@ sequb-ui/
 │   │   ├── ui/                # Reusable UI components
 │   │   │   ├── button.tsx
 │   │   │   └── input.tsx
-│   │   └── workflows/         # Workflow components (placeholder)
+│   │   └── workflow/          # Workflow editor components
+│   │       ├── workflow-editor.tsx
+│   │       ├── node-palette.tsx
+│   │       └── custom-node.tsx
 │   ├── lib/
 │   │   ├── api.ts             # API client with all endpoints
 │   │   └── utils.ts           # Utility functions
 │   ├── types/
 │   │   └── sequb.ts           # TypeScript type definitions
-│   ├── hooks/                 # Custom React hooks (placeholder)
-│   └── stores/                # Zustand stores (placeholder)
+│   ├── hooks/                 # Custom React hooks
+│   └── stores/                # Zustand stores for chat and node registry
+│       ├── chat-store.ts
+│       └── node-registry-store.ts
 ├── .env.example               # Environment variable template
 ├── next.config.js             # Next.js configuration
 ├── tailwind.config.ts         # Tailwind configuration
@@ -89,18 +95,20 @@ sequb-ui/
 ## Implementation Details
 
 ### Chat Interface
-- Built with React state management
-- Supports user and assistant message types
-- Includes loading states and animations
-- Currently uses mock responses (placeholder for backend integration)
+- Modern ChatGPT-style interface with welcome screen
+- Zustand store for session management with localStorage persistence
+- Real API integration with fallback to mock responses
+- Auto-resizing textarea and proper loading states
+- Chat history sidebar with CRUD operations
 
 ### API Client Structure
 The API client (`src/lib/api.ts`) includes endpoints for:
 - Health checks
+- Chat sessions and messages
 - Authentication
 - Workflow CRUD operations
 - Execution monitoring
-- Node registry access
+- Dynamic node registry access
 - Plugin management
 - Webhooks and approvals
 
@@ -111,9 +119,16 @@ The API client (`src/lib/api.ts`) includes endpoints for:
 - Component-based styling with proper abstraction
 
 ### State Management
-- TanStack Query handles server state with 5-minute cache
-- Client state management with Zustand is set up but not implemented
-- Error handling with automatic retry for non-4xx errors
+- TanStack Query handles server state with intelligent caching
+- Zustand stores implemented for chat sessions and node registry
+- localStorage persistence for chat history and user preferences
+- Comprehensive error handling with automatic retry for transient failures
+
+### Visual Workflow Editor
+- React Flow-based drag-and-drop interface
+- Dynamic node palette with search and categorization
+- Custom node components with proper TypeScript integration
+- Real-time workflow building with save/execute functionality
 
 ## Development Workflow
 
@@ -157,18 +172,17 @@ The frontend expects a sequb-protocol server running on the configured API URL w
 ## Current Limitations
 
 ### Not Yet Implemented
-- User authentication flow
-- Real backend integration (uses mock responses)
-- Visual workflow editor
-- Real-time execution monitoring
+- User authentication and authorization flows
+- Dynamic form generation for node configuration
+- Real-time execution monitoring with WebSockets
 - Plugin management interface
-- Workflow persistence
+- Advanced workflow features (versioning, approval workflows)
 
 ### Known Issues
-- Chat interface uses placeholder responses
-- No actual workflow creation logic
-- Limited error handling in UI components
-- No offline functionality
+- Node configuration forms not yet implemented
+- WebSocket integration incomplete
+- Some error edge cases need additional handling
+- Authentication system requires backend implementation
 
 ## Development Guidelines
 
@@ -219,22 +233,22 @@ The frontend expects a sequb-protocol server running on the configured API URL w
 ## Future Development Areas
 
 ### Short Term
-1. Connect to real sequb-protocol backend
-2. Implement actual workflow creation
-3. Add authentication flow
-4. Build basic execution monitoring
+1. Complete dynamic form generation for node configuration
+2. Implement WebSocket integration for real-time updates
+3. Add user authentication and authorization flows
+4. Build execution monitoring and management pages
 
 ### Medium Term
-1. Visual workflow editor
-2. Real-time updates via WebSocket
-3. Plugin management interface
-4. Advanced workflow features
+1. Advanced workflow operations (versioning, branching, approval workflows)
+2. Plugin management and custom node development
+3. Collaboration features and workspace sharing
+4. Performance analytics and workflow optimization tools
 
 ### Long Term
-1. Offline functionality
-2. Advanced analytics
-3. Collaboration features
-4. Mobile app parity
+1. Offline functionality with local workflow execution
+2. Advanced AI-powered workflow suggestions
+3. Enterprise features (SSO, audit logs, role management)
+4. Mobile app with workflow monitoring capabilities
 
 ## Troubleshooting
 

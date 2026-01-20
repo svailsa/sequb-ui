@@ -8,44 +8,46 @@ Sequb UI is a browser-based interface for creating and managing workflows. It pr
 
 ## Features
 
-- **Chat Interface**: Natural language workflow creation through conversational UI
-- **Backend Integration**: API client for sequb-protocol endpoints
-- **Responsive Design**: Works on desktop and mobile browsers
-- **TypeScript**: Type-safe development with strict mode
-- **Component-based UI**: Reusable components with Tailwind CSS styling
-- **Development Tools**: ESLint, TypeScript checking, and hot reload
+- **Chat Interface**: Modern ChatGPT-style interface with session management and history
+- **Visual Workflow Editor**: Drag-and-drop workflow builder with React Flow integration
+- **Dynamic Node Registry**: Live loading of node types from backend with fallback support
+- **Backend Integration**: Complete API client for sequb-protocol endpoints
+- **Responsive Design**: Mobile-first design that works across all device sizes
+- **TypeScript**: Strict type safety throughout the application
+- **State Management**: Zustand stores with localStorage persistence and React Query caching
 
 ## Technology Stack
 
 - **Framework**: Next.js 14 with App Router
-- **Language**: TypeScript 5.7+
+- **Language**: TypeScript 5.7+ with strict mode
 - **Styling**: Tailwind CSS with CSS variables
-- **UI Components**: Custom components with shadcn/ui patterns
+- **UI Components**: Custom components with shadcn/ui patterns  
 - **State Management**: Zustand for client state, TanStack Query for server state
 - **API Client**: Axios with interceptors for auth and error handling
-- **Real-time**: WebSocket support (not implemented)
+- **Workflow Editor**: React Flow for visual workflow building
 
 ## Project Structure
 
 ```
 src/
 ├── app/                    # Next.js App Router
+│   ├── workflows/         # Workflow editor page
 │   ├── globals.css        # Global styles with CSS variables
 │   ├── layout.tsx         # Root layout with providers
-│   └── page.tsx           # Home page
+│   └── page.tsx           # Home page with chat interface
 ├── components/
-│   ├── chat/              # Chat interface components
-│   ├── layout/            # Header, sidebar, navigation
-│   ├── providers/         # React Query and other providers
+│   ├── chat/              # Chat interface and history sidebar
+│   ├── layout/            # Header, sidebar with dynamic node registry
+│   ├── providers/         # React Query providers
 │   ├── ui/                # Reusable UI components
-│   └── workflows/         # Workflow-related components
+│   └── workflow/          # Workflow editor, node palette, custom nodes
 ├── lib/
 │   ├── api.ts             # API client and endpoints
 │   └── utils.ts           # Utility functions
 ├── types/
 │   └── sequb.ts           # TypeScript type definitions
 ├── hooks/                 # Custom React hooks
-└── stores/                # Zustand stores
+└── stores/                # Zustand stores for chat and node registry
 ```
 
 ## Development
@@ -98,30 +100,33 @@ The frontend is designed to integrate seamlessly with the sequb-protocol backend
 
 ### API Endpoints
 
-The frontend includes an API client with endpoints for:
+The frontend includes a complete API client with endpoints for:
 - Health checks (`/api/v1/health`)
+- Chat sessions and messages (`/api/v1/chat/*`) 
 - Workflow operations (`/api/v1/workflows/*`)
 - Execution monitoring (`/api/v1/executions/*`)
-- Node registry access (`/api/v1/nodes/registry`)
+- Dynamic node registry (`/api/v1/nodes/registry`)
 - Authentication (`/api/v1/auth/*`)
 - Plugin management (`/api/v1/plugins/*`)
 
-Note: Backend integration requires a running sequb-protocol server.
+The frontend implements graceful fallback behavior with mock data when the backend is unavailable.
 
 ## Architecture Principles
 
 ### Design Principles
 
-- **Backend-Driven**: Node definitions loaded from server registry
-- **Chat Interface**: Primary interaction through conversational UI
-- **Type Safety**: TypeScript throughout the application
-- **Component Reuse**: Modular UI components with consistent styling
+- **Backend-Driven**: Node definitions and configuration loaded from server registry
+- **Modern UI**: ChatGPT-style interface patterns with visual workflow editing
+- **Type Safety**: Strict TypeScript throughout with comprehensive type coverage
+- **Graceful Degradation**: Fallback to mock data when backend unavailable
+- **State Persistence**: Chat history and user preferences saved locally
 
 ### Performance Features
 
-- **TanStack Query**: Server state caching with 5-minute stale time
+- **TanStack Query**: Server state caching with intelligent invalidation
 - **Code Splitting**: Next.js automatic bundle optimization
-- **Error Handling**: Retry logic for failed API requests
+- **Error Handling**: Comprehensive retry logic with exponential backoff
+- **Optimistic Updates**: Immediate UI updates with server synchronization
 
 ## Deployment
 
@@ -156,19 +161,26 @@ npm run dev
 
 ## Current Status
 
-### Implemented
-- Basic chat interface with message handling
-- Responsive layout with sidebar navigation
-- API client with full endpoint coverage
-- TypeScript type definitions
-- Component structure and styling
+### Implemented Features
+- **Chat Interface**: Modern ChatGPT-style interface with session management
+- **Chat History**: Persistent session storage with CRUD operations  
+- **Visual Workflow Editor**: React Flow-based drag-and-drop workflow builder
+- **Dynamic Node Registry**: Live loading from backend with comprehensive fallback
+- **Node Palette**: Searchable, categorized node library with drag-and-drop
+- **API Integration**: Complete client with error handling and retry logic
+- **Responsive Design**: Mobile-first layout that adapts to all screen sizes
+- **Type Safety**: Comprehensive TypeScript coverage throughout
 
-### Not Implemented
-- Real backend integration (uses mock responses)
-- User authentication
-- Visual workflow editor
-- Real-time execution monitoring
-- WebSocket connections
+### In Progress
+- Dynamic form generation for node configuration
+- WebSocket integration for real-time updates
+- Additional management pages (executions, templates, settings)
+
+### Not Yet Implemented
+- User authentication and authorization flows
+- Real-time execution monitoring and logs
+- Plugin management interface
+- Advanced workflow features (versioning, approval workflows)
 
 ## Contributing
 
@@ -182,16 +194,16 @@ npm run dev
 ## Development Roadmap
 
 ### Next Steps
-- Connect to sequb-protocol backend server
-- Implement real workflow creation from chat
-- Add user authentication flow
-- Build execution monitoring interface
+- Complete dynamic form generation for node configuration
+- Implement WebSocket integration for real-time updates
+- Add user authentication and authorization flows
+- Build execution monitoring and management pages
 
 ### Future Features
-- Visual workflow editor
-- Real-time updates via WebSocket
-- Plugin management
-- Advanced workflow operations
+- Advanced workflow operations (versioning, branching, approval workflows)
+- Plugin management and custom node development
+- Collaboration features and workspace sharing
+- Performance analytics and workflow optimization tools
 
 ## License
 
