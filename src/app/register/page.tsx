@@ -1,17 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { discoveryClient, type RegionInfo, formatRegionDisplay, getRegionFlag } from '@/lib/discovery';
 import { useI18n } from '@/providers/i18n-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff, Loader2, Github, Chrome, Check, X } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Github, Chrome, Check, X, MapPin, Globe } from 'lucide-react';
 
 interface PasswordStrength {
   score: number;
@@ -27,16 +29,57 @@ export default function RegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
+    regionCode: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [detectingLocation, setDetectingLocation] = useState(false);
+  const [regions, setRegions] = useState<RegionInfo[]>([]);
   const [passwordStrength, setPasswordStrength] = useState<PasswordStrength>({
     score: 0,
     label: 'Weak',
     color: 'bg-red-500',
   });
+
+  // Fetch available regions on mount
+  const regionsQuery = useQuery({
+    queryKey: ['regions'],
+    queryFn: async () => {
+      const regions = await discoveryClient.getRegions();
+      setRegions(regions);
+      return regions;
+    },
+  });
+
+  // Auto-detect region on mount
+  useEffect(() => {
+    const autoDetect = async () => {
+      setDetectingLocation(true);
+      try {
+        const detectedRegion = await discoveryClient.autoDetectRegion();
+        if (detectedRegion) {
+          setFormData(prev => ({ ...prev, regionCode: detectedRegion.code }));
+        } else if (regions.length > 0) {
+          // Fallback to first region if auto-detection fails
+          setFormData(prev => ({ ...prev, regionCode: regions[0].code }));
+        }
+      } catch (error) {
+        console.error('Failed to auto-detect region:', error);
+        // Fallback to first available region
+        if (regions.length > 0) {
+          setFormData(prev => ({ ...prev, regionCode: regions[0].code }));
+        }
+      } finally {
+        setDetectingLocation(false);
+      }
+    };
+
+    if (regions.length > 0 && !formData.regionCode) {
+      autoDetect();
+    }
+  }, [regions]);
 
   const calculatePasswordStrength = (password: string): PasswordStrength => {
     let score = 0;
@@ -113,10 +156,12 @@ export default function RegisterPage() {
         throw new Error('Validation failed');
       }
 
+      // Updated register call with region support
       const response = await api.auth.register(
         formData.email,
         formData.password,
-        formData.name
+        formData.name,
+        formData.regionCode
       );
       return response.data;
     },
@@ -292,6 +337,67 @@ export default function RegisterPage() {
                 </div>
                 {errors.confirmPassword && (
                   <p className="text-xs text-destructive">{errors.confirmPassword}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="region">{t('auth.region') || 'Select Your Region'}</Label>
+                <Select
+                  value={formData.regionCode}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, regionCode: value }))}
+                  disabled={registerMutation.isPending || regionsQuery.isLoading || detectingLocation}
+                >
+                  <SelectTrigger id="region" className="w-full">
+                    <SelectValue placeholder="Select a region...">
+                      {formData.regionCode ? (
+                        <div className="flex items-center gap-2">
+                          <span>{getRegionFlag(formData.regionCode)}</span>
+                          <span>
+                            {regions.find(r => r.code === formData.regionCode)?.name || formData.regionCode}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">
+                          {detectingLocation ? 'Detecting your location...' : 'Select a region...'}
+                        </span>
+                      )}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {regionsQuery.isLoading ? (
+                      <div className="p-2 text-center text-sm text-muted-foreground">
+                        Loading regions...
+                      </div>
+                    ) : regions.length > 0 ? (
+                      regions.map((region) => (
+                        <SelectItem key={region.code} value={region.code}>
+                          <div className="flex items-center gap-2">
+                            <span>{getRegionFlag(region.code)}</span>
+                            <span>{formatRegionDisplay(region)}</span>
+                            {region.status !== 'healthy' && (
+                              <span className="text-xs text-orange-500">({region.status})</span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div className="p-2 text-center text-sm text-muted-foreground">
+                        No regions available
+                      </div>
+                    )}
+                  </SelectContent>
+                </Select>
+                {detectingLocation && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    Auto-detecting closest region based on your location...
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Your data will be stored in this region. You can change this later in settings.
+                </p>
+                {errors.region && (
+                  <p className="text-xs text-destructive">{errors.region}</p>
                 )}
               </div>
 

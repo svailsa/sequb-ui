@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useMutation } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { discoveryClient } from '@/lib/discovery';
 import { useI18n } from '@/providers/i18n-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,7 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
+  const [regionRedirect, setRegionRedirect] = useState<{ region_code: string; region_endpoint: string; message: string } | null>(null);
 
   const loginMutation = useMutation({
     mutationFn: async () => {
@@ -37,10 +39,32 @@ export default function LoginPage() {
       const response = await api.auth.login(email, password);
       return response.data;
     },
-    onSuccess: (data) => {
-      // Store token
+    onSuccess: async (data) => {
+      // Handle region redirect
+      const redirectResponse = await discoveryClient.handleLoginResponse(data);
+      
+      if (redirectResponse.status === 'region_redirect') {
+        // Show region redirect message
+        setRegionRedirect({
+          region_code: redirectResponse.region_code,
+          region_endpoint: redirectResponse.region_endpoint,
+          message: redirectResponse.message || `Please login at your assigned region: ${redirectResponse.region_endpoint}`
+        });
+        
+        // Optionally auto-redirect after a delay
+        setTimeout(() => {
+          window.location.href = `${redirectResponse.region_endpoint}/login`;
+        }, 3000);
+        
+        return;
+      }
+      
+      // Normal login success
       if (data.token) {
         localStorage.setItem('sequb_token', data.token);
+        if (data.region) {
+          localStorage.setItem('user_region', data.region);
+        }
         if (rememberMe) {
           localStorage.setItem('sequb_remember_email', email);
         }
@@ -79,6 +103,12 @@ export default function LoginPage() {
       setEmail(savedEmail);
       setRememberMe(true);
     }
+    
+    // Check for any pending region redirect
+    const pendingRedirect = discoveryClient.checkForRegionRedirect();
+    if (pendingRedirect) {
+      setRegionRedirect(pendingRedirect as any);
+    }
   });
 
   return (
@@ -99,6 +129,22 @@ export default function LoginPage() {
           
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
+              {regionRedirect && (
+                <div className="p-3 text-sm bg-warning/10 border border-warning rounded-md space-y-2">
+                  <p className="font-medium">{regionRedirect.message}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Redirecting to {regionRedirect.region_endpoint} in a few seconds...
+                  </p>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.location.href = `${regionRedirect.region_endpoint}/login`}
+                  >
+                    Go to {regionRedirect.region_code.toUpperCase()} region now
+                  </Button>
+                </div>
+              )}
               {errors.general && (
                 <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
                   {errors.general}

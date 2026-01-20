@@ -245,6 +245,24 @@ The frontend expects a sequb-protocol server running on the configured API URL w
 - `NEXT_PUBLIC_WS_URL`: WebSocket URL (planned)
 - `NODE_ENV`: Environment setting
 
+## Deployment Architecture
+
+### Island Architecture
+The sequb-ui frontend is designed to be deployed alongside sequb-protocol backend instances in an island architecture pattern:
+
+- **Regional Instances**: Each deployment consists of a paired sequb-protocol backend and sequb-ui frontend instance
+- **Geographic Distribution**: Instances are deployed per region or country (e.g., US, AU, UK, EU)
+- **User Assignment**: Users are assigned to or select an instance based on geographic location during registration
+- **Data Isolation**: Each island operates independently with its own data storage and user base
+- **Deployment Technology**: Infrastructure deployed using Terraform and NixOS to Vultr cloud infrastructure
+- **Package Deployment**: Frontend and backend are deployed as a coordinated package to ensure compatibility
+
+### Instance Configuration
+- Each sequb-ui instance connects to its local sequb-protocol backend via `NEXT_PUBLIC_API_URL`
+- WebSocket connections remain within the same island for low latency
+- No cross-island communication in the base architecture
+- Each island maintains its own user authentication and workflow data
+
 ## Future Development Areas
 
 ### Potential Enhancements

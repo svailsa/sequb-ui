@@ -56,8 +56,13 @@ export const api = {
   auth: {
     login: (email: string, password: string) => 
       apiClient.post('/api/v1/auth/login', { email, password }),
-    register: (email: string, password: string, name?: string) => 
-      apiClient.post('/api/v1/auth/register', { email, password, name }),
+    register: (email: string, password: string, name?: string, region_code?: string) => 
+      apiClient.post('/api/v1/auth/register', { 
+        email, 
+        password, 
+        username: name,  // Backend expects username not name
+        region_code 
+      }),
     logout: () => apiClient.post('/api/v1/auth/logout'),
     refresh: () => apiClient.post('/api/v1/auth/refresh'),
     profile: () => apiClient.get<ApiResponse<User>>('/api/v1/auth/profile'),
