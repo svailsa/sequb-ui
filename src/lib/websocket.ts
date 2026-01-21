@@ -1,6 +1,8 @@
 "use client";
 
 import { EventEmitter } from 'events';
+import { safeJsonParse } from './safe-json';
+import { logger } from './logger';
 
 export interface WebSocketMessage {
   type: string;
@@ -58,22 +60,31 @@ class WebSocketService extends EventEmitter {
 
   private getToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('sequb_token');
+    // Use auth service for token management
+    const { authService } = require('./auth-service');
+    return authService.getToken();
   }
 
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
-        this.token = this.getToken();
-        const url = this.token 
-          ? `${this.url}?token=${encodeURIComponent(this.token)}`
-          : this.url;
-
-        this.ws = new WebSocket(url);
+        // Don't pass token in URL for security
+        this.ws = new WebSocket(this.url);
 
         this.ws.onopen = () => {
-          console.log('WebSocket connected');
+          logger.info('WebSocket connected');
           this.isConnected = true;
+          
+          // Send authentication as first message after connection
+          this.token = this.getToken();
+          if (this.token) {
+            this.send({
+              type: 'auth',
+              data: { token: this.token },
+              timestamp: new Date().toISOString()
+            });
+          }
+          
           this.reconnectAttempts = 0;
           this.startHeartbeat();
           this.emit('connected');
@@ -81,16 +92,16 @@ class WebSocketService extends EventEmitter {
         };
 
         this.ws.onmessage = (event) => {
-          try {
-            const message: WSMessage = JSON.parse(event.data);
+          const message = safeJsonParse<WSMessage>(event.data);
+          if (message) {
             this.handleMessage(message);
-          } catch (error) {
-            console.error('Failed to parse WebSocket message:', error);
+          } else {
+            logger.warn('Received invalid WebSocket message');
           }
         };
 
         this.ws.onclose = (event) => {
-          console.log('WebSocket disconnected:', event.code, event.reason);
+          logger.info('WebSocket disconnected:', event.code, event.reason);
           this.isConnected = false;
           this.stopHeartbeat();
           this.emit('disconnected', event);
@@ -101,7 +112,7 @@ class WebSocketService extends EventEmitter {
         };
 
         this.ws.onerror = (error) => {
-          console.error('WebSocket error:', error);
+          logger.error('WebSocket error:', error);
           this.emit('error', error);
           reject(error);
         };

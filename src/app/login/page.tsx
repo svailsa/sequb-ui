@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useMutation } from '@tanstack/react-query';
@@ -13,6 +13,11 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff, Loader2, Github, Chrome } from 'lucide-react';
+import { authService } from '@/lib/auth-service';
+import { rateLimiter, RateLimitConfigs } from '@/lib/rate-limiter';
+import { sanitizeEmail, sanitizeInput } from '@/lib/sanitizer';
+import { csrfService } from '@/lib/csrf';
+import { logger } from '@/lib/logger';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,17 +31,29 @@ export default function LoginPage() {
 
   const loginMutation = useMutation({
     mutationFn: async () => {
+      // Check rate limit
+      if (!rateLimiter.isAllowed('login', RateLimitConfigs.LOGIN)) {
+        const resetTime = rateLimiter.getResetTime('login', RateLimitConfigs.LOGIN);
+        throw new Error(`Too many login attempts. Please try again in ${resetTime} seconds.`);
+      }
+      
       // Validate inputs
       const newErrors: typeof errors = {};
       if (!email) newErrors.email = 'Email is required';
       if (!password) newErrors.password = 'Password is required';
+      
+      // Sanitize email
+      const sanitizedEmail = sanitizeEmail(email);
+      if (!sanitizedEmail) {
+        newErrors.email = 'Invalid email format';
+      }
       
       if (Object.keys(newErrors).length > 0) {
         setErrors(newErrors);
         throw new Error('Validation failed');
       }
 
-      const response = await api.auth.login(email, password);
+      const response = await api.auth.login(sanitizedEmail, password);
       return response.data;
     },
     onSuccess: async (data) => {
@@ -61,13 +78,20 @@ export default function LoginPage() {
       
       // Normal login success
       if (data.token) {
-        localStorage.setItem('sequb_token', data.token);
+        // Use secure auth service instead of localStorage
+        authService.setToken(data.token, data.refreshToken);
         if (data.region) {
-          localStorage.setItem('user_region', data.region);
+          authService.setUserRegion(data.region);
         }
         if (rememberMe) {
+          // Only store email for remember me (not sensitive)
           localStorage.setItem('sequb_remember_email', email);
+        } else {
+          localStorage.removeItem('sequb_remember_email');
         }
+        
+        // Rotate CSRF token after successful login
+        csrfService.rotateToken();
       }
       
       // Redirect to home or intended destination
@@ -75,9 +99,11 @@ export default function LoginPage() {
       router.push(redirectTo as any);
     },
     onError: (error: any) => {
-      console.error('Login failed:', error);
+      logger.error('Login failed:', error);
       if (error.response?.status === 401) {
         setErrors({ general: 'Invalid email or password' });
+      } else if (error.message?.includes('Too many login attempts')) {
+        setErrors({ general: error.message });
       } else if (error.message !== 'Validation failed') {
         setErrors({ general: 'An error occurred during login. Please try again.' });
       }
@@ -97,7 +123,7 @@ export default function LoginPage() {
   };
 
   // Load saved email if remember me was checked
-  useState(() => {
+  useEffect(() => {
     const savedEmail = localStorage.getItem('sequb_remember_email');
     if (savedEmail) {
       setEmail(savedEmail);
@@ -109,7 +135,7 @@ export default function LoginPage() {
     if (pendingRedirect) {
       setRegionRedirect(pendingRedirect as any);
     }
-  });
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
@@ -158,7 +184,7 @@ export default function LoginPage() {
                   type="email"
                   placeholder="you@example.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(sanitizeInput(e.target.value))}
                   disabled={loginMutation.isPending}
                 />
                 {errors.email && (

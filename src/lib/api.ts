@@ -11,6 +11,8 @@ import {
   ApiResponse,
   PaginatedResponse 
 } from '@/types/sequb';
+import { authService } from './auth-service';
+import { csrfService } from './csrf';
 
 // Create axios instance
 export const apiClient = axios.create({
@@ -18,15 +20,23 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000,
+  timeout: 10000, // Reduced from 30s to 10s for security
 });
 
-// Request interceptor for auth
+// Request interceptor for auth and CSRF
 apiClient.interceptors.request.use((config) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('sequb_token') : null;
+  // Add authentication token
+  const token = authService.getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  
+  // Add CSRF token for state-changing requests
+  const method = config.method?.toLowerCase();
+  if (method && ['post', 'put', 'delete', 'patch'].includes(method)) {
+    config.headers['X-CSRF-Token'] = csrfService.getToken();
+  }
+  
   return config;
 });
 
@@ -35,10 +45,21 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      // Handle unauthorized - redirect to login
+      // Handle unauthorized - clear auth and redirect to login
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('sequb_token');
-        window.location.href = '/login';
+        authService.clearToken();
+        csrfService.clearToken();
+        // Preserve the current path for redirect after login
+        const currentPath = window.location.pathname;
+        window.location.href = `/login?from=${encodeURIComponent(currentPath)}`;
+      }
+    } else if (error.response?.status === 403) {
+      // CSRF token might be invalid, try to rotate it
+      if (error.response.data && 
+          typeof error.response.data === 'object' && 
+          'message' in error.response.data &&
+          String(error.response.data.message).toLowerCase().includes('csrf')) {
+        csrfService.rotateToken();
       }
     }
     return Promise.reject(error);

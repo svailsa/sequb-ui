@@ -19,6 +19,7 @@ import {
   FileCode,
   Package
 } from 'lucide-react';
+import { sanitizeFileName, sanitizeInput } from '@/lib/sanitizer';
 
 interface PluginUploadProps {
   onSuccess?: () => void;
@@ -79,23 +80,86 @@ export default function PluginUpload({ onSuccess, onCancel }: PluginUploadProps)
   const validateFile = (file: File): { isValid: boolean; error?: string } => {
     const validExtensions = ['.wasm', '.js', '.py', '.zip'];
     const maxSize = 10 * 1024 * 1024; // 10MB
-
-    const extension = file.name.substring(file.name.lastIndexOf('.'));
     
-    if (!validExtensions.includes(extension.toLowerCase())) {
+    // Sanitize filename first
+    const sanitizedName = sanitizeFileName(file.name);
+    if (sanitizedName !== file.name) {
+      return {
+        isValid: false,
+        error: 'File name contains invalid characters'
+      };
+    }
+
+    // Check file extension
+    const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+    if (!validExtensions.includes(extension)) {
       return { 
         isValid: false, 
         error: `Invalid file type. Supported: ${validExtensions.join(', ')}` 
       };
     }
-
+    
+    // Check file size
     if (file.size > maxSize) {
       return { 
         isValid: false, 
         error: `File size exceeds 10MB limit` 
       };
     }
-
+    
+    // Check for empty files
+    if (file.size === 0) {
+      return {
+        isValid: false,
+        error: 'File is empty'
+      };
+    }
+    
+    // Check for path traversal attempts
+    if (file.name.includes('../') || file.name.includes('..\\')) {
+      return {
+        isValid: false,
+        error: 'Invalid file name: path traversal detected'
+      };
+    }
+    
+    // Check for suspicious patterns in filename
+    const suspiciousPatterns = [
+      /^\./, // Hidden files
+      /\0/, // Null bytes
+      /<script/i, // Script tags
+      /javascript:/i, // JavaScript protocol
+      /on\w+=/i, // Event handlers
+      /\.(exe|bat|cmd|sh|ps1|vbs)$/i // Executable extensions
+    ];
+    
+    for (const pattern of suspiciousPatterns) {
+      if (pattern.test(file.name)) {
+        return {
+          isValid: false,
+          error: 'File name contains suspicious patterns'
+        };
+      }
+    }
+    
+    // Additional MIME type validation
+    const validMimeTypes = [
+      'application/wasm',
+      'application/javascript',
+      'text/javascript',
+      'application/x-javascript',
+      'text/x-python',
+      'application/x-python-code',
+      'application/zip',
+      'application/x-zip-compressed',
+      'application/octet-stream' // Generic binary
+    ];
+    
+    if (file.type && !validMimeTypes.includes(file.type)) {
+      console.warn(`Suspicious MIME type: ${file.type} for file: ${file.name}`);
+      // Don't reject based on MIME type alone as it can be spoofed
+    }
+    
     return { isValid: true };
   };
 
@@ -295,7 +359,7 @@ export default function PluginUpload({ onSuccess, onCancel }: PluginUploadProps)
                   id="name"
                   placeholder="my-awesome-plugin"
                   value={metadata.name}
-                  onChange={(e) => setMetadata(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) => setMetadata(prev => ({ ...prev, name: sanitizeInput(e.target.value) }))}
                 />
               </div>
 
@@ -305,7 +369,7 @@ export default function PluginUpload({ onSuccess, onCancel }: PluginUploadProps)
                   id="version"
                   placeholder="1.0.0"
                   value={metadata.version}
-                  onChange={(e) => setMetadata(prev => ({ ...prev, version: e.target.value }))}
+                  onChange={(e) => setMetadata(prev => ({ ...prev, version: sanitizeInput(e.target.value) }))}
                 />
               </div>
             </div>
@@ -316,7 +380,7 @@ export default function PluginUpload({ onSuccess, onCancel }: PluginUploadProps)
                 id="author"
                 placeholder="Your name or organization"
                 value={metadata.author}
-                onChange={(e) => setMetadata(prev => ({ ...prev, author: e.target.value }))}
+                onChange={(e) => setMetadata(prev => ({ ...prev, author: sanitizeInput(e.target.value) }))}
               />
             </div>
 
@@ -326,7 +390,7 @@ export default function PluginUpload({ onSuccess, onCancel }: PluginUploadProps)
                 id="description"
                 placeholder="Describe what your plugin does..."
                 value={metadata.description}
-                onChange={(e) => setMetadata(prev => ({ ...prev, description: e.target.value }))}
+                onChange={(e) => setMetadata(prev => ({ ...prev, description: sanitizeInput(e.target.value) }))}
                 rows={3}
               />
             </div>

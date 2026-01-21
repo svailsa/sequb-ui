@@ -14,6 +14,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff, Loader2, Github, Chrome, Check, X, MapPin, Globe } from 'lucide-react';
+import { authService } from '@/lib/auth-service';
+import { rateLimiter, RateLimitConfigs } from '@/lib/rate-limiter';
+import { sanitizeEmail, sanitizeInput } from '@/lib/sanitizer';
+import { csrfService } from '@/lib/csrf';
 
 interface PasswordStrength {
   score: number;
@@ -168,7 +172,8 @@ export default function RegisterPage() {
     onSuccess: (data) => {
       // Store token if provided
       if (data.token) {
-        localStorage.setItem('sequb_token', data.token);
+        authService.setToken(data.token, data.refreshToken);
+        csrfService.rotateToken();
       }
       
       // Redirect to login or home

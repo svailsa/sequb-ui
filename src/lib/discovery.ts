@@ -3,6 +3,9 @@
  * Handles region discovery, user-region mapping, and cross-region redirects
  */
 
+import { safeJsonParse } from './safe-json';
+import { logger } from './logger';
+
 export interface RegionInfo {
   code: string;
   name: string;
@@ -337,18 +340,16 @@ export class DiscoveryClient {
     const stored = localStorage.getItem('region_redirect');
     if (!stored) return null;
 
-    try {
-      const redirect = JSON.parse(stored);
+    const redirect = safeJsonParse<any>(stored);
+    if (redirect && redirect.timestamp) {
       // Check if redirect is still valid (within last hour)
       if (Date.now() - redirect.timestamp < 60 * 60 * 1000) {
         return redirect;
       }
-      // Clear expired redirect
-      localStorage.removeItem('region_redirect');
-    } catch {
-      localStorage.removeItem('region_redirect');
     }
     
+    // Clear expired or invalid redirect
+    localStorage.removeItem('region_redirect');
     return null;
   }
 
