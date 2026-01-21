@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Send, Bot, User, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useChatStore } from "@/stores/chat-store";
+import { StatusIndicator } from "@/components/ui/status-indicator";
+import { useUIConfiguration } from "@/components/providers/ui-configuration-provider";
 
 export function ChatInterface() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -18,6 +20,20 @@ export function ChatInterface() {
     createSession,
     getCurrentSession
   } = useChatStore();
+
+  const { 
+    getChatExamples, 
+    getConfigValue, 
+    isFeatureEnabled 
+  } = useUIConfiguration();
+
+  const currentSession = getCurrentSession();
+  const isOfflineMode = currentSession?.id?.startsWith('offline_');
+  
+  // Get backend-driven configuration
+  const chatExamples = getChatExamples();
+  const maxMessageLength = getConfigValue('chat.maxMessageLength') || 4000;
+  const suggestionDelay = getConfigValue('chat.suggestionDelay') || 1000;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -90,6 +106,12 @@ export function ChatInterface() {
           <div className="flex items-center space-x-2">
             <Bot className="w-5 h-5 text-primary" />
             <span className="font-medium">Sequb Assistant</span>
+            {isOfflineMode && (
+              <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full">
+                Offline Mode
+              </span>
+            )}
+            <StatusIndicator type="compact" />
           </div>
           <Button variant="outline" size="sm" onClick={newChatHandler}>
             <Plus className="w-4 h-4 mr-2" />
@@ -115,21 +137,20 @@ export function ChatInterface() {
                 </p>
               </div>
               <div className="grid gap-3 text-sm">
-                <div className="p-3 border border-border rounded-lg text-left hover:bg-muted/50 cursor-pointer transition-colors"
-                     onClick={() => fillInput("Create a workflow that sends me a daily weather report")}>
-                  <div className="font-medium">📧 Daily Weather Report</div>
-                  <div className="text-muted-foreground">Get weather updates delivered to your inbox</div>
-                </div>
-                <div className="p-3 border border-border rounded-lg text-left hover:bg-muted/50 cursor-pointer transition-colors"
-                     onClick={() => fillInput("Set up an automation to backup my photos weekly")}>
-                  <div className="font-medium">📸 Photo Backup</div>
-                  <div className="text-muted-foreground">Automatically backup photos on a schedule</div>
-                </div>
-                <div className="p-3 border border-border rounded-lg text-left hover:bg-muted/50 cursor-pointer transition-colors"
-                     onClick={() => fillInput("Build a workflow that summarizes my emails")}>
-                  <div className="font-medium">📨 Email Summarizer</div>
-                  <div className="text-muted-foreground">Get AI-powered summaries of your emails</div>
-                </div>
+                {chatExamples.map((example) => (
+                  <div 
+                    key={example.id}
+                    className="p-3 border border-border rounded-lg text-left hover:bg-muted/50 cursor-pointer transition-colors"
+                    onClick={() => fillInput(example.prompt)}
+                  >
+                    <div className="font-medium">
+                      {example.icon} {example.title}
+                    </div>
+                    <div className="text-muted-foreground">
+                      {example.description}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -206,6 +227,7 @@ export function ChatInterface() {
                 placeholder="Message Sequb..."
                 disabled={isLoading}
                 rows={1}
+                maxLength={maxMessageLength}
                 className="w-full resize-none border-0 bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-0 max-h-[200px] overflow-y-auto"
                 style={{ minHeight: '20px' }}
               />

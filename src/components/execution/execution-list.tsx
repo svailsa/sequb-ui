@@ -10,6 +10,8 @@ import { Execution, PaginatedResponse } from '@/types/sequb';
 import { Search, Filter, Loader2, RefreshCw } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useWebSocketContext } from '@/components/providers/websocket-provider';
+import { useStatusStore } from '@/stores/status-store';
+import { StatusIndicator } from '@/components/ui/status-indicator';
 
 interface ExecutionListProps {
   onViewExecution?: (execution: Execution) => void;
@@ -27,6 +29,7 @@ export function ExecutionList({
 
   const queryClient = useQueryClient();
   const { lastExecutionUpdate, isConnected } = useWebSocketContext();
+  const { systemStatus, executionStatuses } = useStatusStore();
 
   // Fetch executions with filters
   const { data, isLoading, error, refetch } = useQuery<PaginatedResponse<Execution>>({
@@ -141,12 +144,13 @@ export function ExecutionList({
         </div>
         
         <div className="flex items-center space-x-2">
-          <div className={`flex items-center space-x-2 ${isConnected ? 'text-green-600' : 'text-muted-foreground'}`}>
-            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-muted'}`} />
-            <span className="text-xs">
-              {isConnected ? 'Live updates' : 'Auto-refresh'}
-            </span>
-          </div>
+          <StatusIndicator type="compact" showLabel />
+          
+          {systemStatus.activeExecutions > 0 && (
+            <div className="text-xs text-muted-foreground">
+              {systemStatus.activeExecutions} active
+            </div>
+          )}
           
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />

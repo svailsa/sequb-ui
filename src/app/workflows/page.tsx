@@ -1,28 +1,96 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { WorkflowList } from "@/components/workflow/workflow-list";
 import { WorkflowEditorWithProvider } from "@/components/workflow/workflow-editor";
 import { Workflow } from "@/types/sequb";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { api } from "@/lib/api";
+import { logger } from "@/lib/logger";
 
 type ViewMode = 'list' | 'editor' | 'view';
 
 export default function WorkflowsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
+  const queryClient = useQueryClient();
+
+  // Workflow save mutation
+  const saveWorkflowMutation = useMutation({
+    mutationFn: async ({ nodes, edges }: { nodes: any[], edges: any[] }) => {
+      const workflowData = {
+        name: selectedWorkflow?.name || 'New Workflow',
+        description: selectedWorkflow?.description || '',
+        graph: {
+          nodes: nodes.map(node => ({
+            id: node.id,
+            type: node.data.nodeType.id,
+            position: node.position,
+            data: node.data.inputs || {},
+            label: node.data.label || node.data.nodeType.name,
+          })),
+          edges: edges.map(edge => ({
+            id: edge.id,
+            source: edge.source,
+            target: edge.target,
+            sourceHandle: edge.sourceHandle,
+            targetHandle: edge.targetHandle,
+            label: edge.label,
+          })),
+        },
+      };
+
+      if (selectedWorkflow?.id) {
+        // Update existing workflow
+        const response = await api.workflows.update(selectedWorkflow.id, workflowData);
+        return response.data;
+      } else {
+        // Create new workflow
+        const response = await api.workflows.create(workflowData);
+        return response.data;
+      }
+    },
+    onSuccess: (data) => {
+      logger.info('Workflow saved successfully:', data);
+      // Update the selected workflow with the returned data
+      if (data.data) {
+        setSelectedWorkflow(data.data);
+      }
+      // Invalidate workflows cache to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['workflows'] });
+    },
+    onError: (error) => {
+      logger.error('Failed to save workflow:', error);
+    },
+  });
+
+  // Workflow execute mutation
+  const executeWorkflowMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedWorkflow?.id) {
+        throw new Error('No workflow selected for execution');
+      }
+      const response = await api.workflows.execute(selectedWorkflow.id);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      logger.info('Workflow execution started:', data);
+      // Invalidate executions cache to show the new execution
+      queryClient.invalidateQueries({ queryKey: ['executions'] });
+    },
+    onError: (error) => {
+      logger.error('Failed to execute workflow:', error);
+    },
+  });
 
   const handleSave = async (nodes: any[], edges: any[]) => {
-    console.log('Saving workflow:', { nodes, edges });
-    // TODO: Implement actual workflow save logic using API
-    return Promise.resolve();
+    await saveWorkflowMutation.mutateAsync({ nodes, edges });
   };
 
   const handleExecute = async () => {
-    console.log('Executing workflow...');
-    // TODO: Implement actual workflow execution logic using API
-    return Promise.resolve();
+    await executeWorkflowMutation.mutateAsync();
   };
 
   const handleCreateWorkflow = () => {
@@ -74,6 +142,8 @@ export default function WorkflowsPage() {
             workflowId={selectedWorkflow?.id}
             onSave={handleSave}
             onExecute={handleExecute}
+            isSaving={saveWorkflowMutation.isPending}
+            isExecuting={executeWorkflowMutation.isPending}
           />
         </div>
       </div>

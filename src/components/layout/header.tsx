@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { User, Settings, LogOut } from "lucide-react";
-import { WebSocketStatus } from "@/components/providers/websocket-provider";
+import { StatusIndicator } from "@/components/ui/status-indicator";
 import LanguageSelector from "@/components/language-selector";
 import { useI18n } from "@/providers/i18n-provider";
 import Link from "next/link";
@@ -18,7 +18,10 @@ export function Header() {
           <div className="text-sm text-muted-foreground">
             AI Workflow Orchestration
           </div>
-          <WebSocketStatus />
+          <div className="flex items-center space-x-3">
+            <StatusIndicator type="backend" />
+            <StatusIndicator type="websocket" />
+          </div>
         </div>
         
         <div className="flex items-center space-x-2">

@@ -26,13 +26,32 @@ import {
 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { usePreferences } from '@/components/providers/preferences-provider';
+import { useUIConfiguration } from '@/components/providers/ui-configuration-provider';
+import { StatusIndicator } from '@/components/ui/status-indicator';
 
 type SettingsTab = 'general' | 'profile' | 'notifications' | 'security' | 'appearance' | 'language' | 'api' | 'advanced';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
-  const [unsavedChanges, setUnsavedChanges] = useState(false);
   const queryClient = useQueryClient();
+  
+  const {
+    preferences,
+    isLoading: prefsLoading,
+    error: prefsError,
+    hasUnsavedChanges,
+    updatePreference,
+    savePreferences,
+  } = usePreferences();
+
+  const {
+    getSupportedLanguages,
+    getSupportedTimezones,
+    getAvailableThemes,
+    isFeatureEnabled,
+    getConfigValue,
+  } = useUIConfiguration();
 
   // Fetch user profile
   const { data: userData, isLoading: isLoadingUser } = useQuery({
@@ -67,19 +86,16 @@ export default function SettingsPage() {
 
   // Save settings mutation
   const saveSettingsMutation = useMutation({
-    mutationFn: async (settings: any) => {
-      // In a real implementation, this would call appropriate API endpoints
-      console.log('Saving settings:', settings);
-      return settings;
+    mutationFn: async () => {
+      await savePreferences();
     },
     onSuccess: () => {
-      setUnsavedChanges(false);
       queryClient.invalidateQueries({ queryKey: ['user-profile'] });
-      alert('Settings saved successfully!');
+      // Show success notification instead of alert
     },
     onError: (error) => {
       console.error('Failed to save settings:', error);
-      alert('Failed to save settings. Please try again.');
+      // Show error notification instead of alert
     },
   });
 
@@ -95,7 +111,7 @@ export default function SettingsPage() {
   ];
 
   const handleSaveSettings = () => {
-    saveSettingsMutation.mutate(userData);
+    saveSettingsMutation.mutate();
   };
 
   const renderTabContent = () => {
@@ -112,24 +128,18 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="workspace-name">Workspace Name</Label>
-                  <Input
-                    id="workspace-name"
-                    placeholder="My Workspace"
-                    defaultValue="Default Workspace"
-                    onChange={() => setUnsavedChanges(true)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
                   <Label htmlFor="default-timeout">Default Execution Timeout (seconds)</Label>
                   <Input
                     id="default-timeout"
                     type="number"
                     placeholder="300"
-                    defaultValue="300"
-                    onChange={() => setUnsavedChanges(true)}
+                    value={preferences?.workflow.defaultTimeout || 300}
+                    max={getConfigValue('limits.maxExecutionTime') || 3600}
+                    onChange={(e) => updatePreference('workflow.defaultTimeout', parseInt(e.target.value))}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Maximum: {getConfigValue('limits.maxExecutionTime') || 3600} seconds
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -138,16 +148,18 @@ export default function SettingsPage() {
                     id="max-retries"
                     type="number"
                     placeholder="3"
-                    defaultValue="3"
-                    onChange={() => setUnsavedChanges(true)}
+                    value={preferences?.workflow.maxRetries || 3}
+                    min={0}
+                    max={10}
+                    onChange={(e) => updatePreference('workflow.maxRetries', parseInt(e.target.value))}
                   />
                 </div>
 
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="auto-save"
-                    defaultChecked
-                    onCheckedChange={() => setUnsavedChanges(true)}
+                    checked={preferences?.workflow.autoSave ?? true}
+                    onCheckedChange={(checked) => updatePreference('workflow.autoSave', checked)}
                   />
                   <Label htmlFor="auto-save">Enable auto-save for workflows</Label>
                 </div>
@@ -155,7 +167,8 @@ export default function SettingsPage() {
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="debug-mode"
-                    onCheckedChange={() => setUnsavedChanges(true)}
+                    checked={preferences?.workflow.debugMode ?? false}
+                    onCheckedChange={(checked) => updatePreference('workflow.debugMode', checked)}
                   />
                   <Label htmlFor="debug-mode">Enable debug mode</Label>
                 </div>
@@ -165,7 +178,7 @@ export default function SettingsPage() {
         );
 
       case 'profile':
-        return <UserPreferences userData={userData} onUpdate={() => setUnsavedChanges(true)} />;
+        return <UserPreferences userData={userData} onUpdate={() => {}} />;
 
       case 'notifications':
         return (
@@ -184,8 +197,8 @@ export default function SettingsPage() {
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="email-workflow"
-                      defaultChecked={(userData as any)?.preferences?.notifications?.workflow_updates}
-                      onCheckedChange={() => setUnsavedChanges(true)}
+                      checked={preferences?.notifications.email.workflowUpdates ?? true}
+                      onCheckedChange={(checked) => updatePreference('notifications.email.workflowUpdates', checked)}
                     />
                     <Label htmlFor="email-workflow">Workflow updates</Label>
                   </div>
@@ -193,8 +206,8 @@ export default function SettingsPage() {
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="email-execution"
-                      defaultChecked={(userData as any)?.preferences?.notifications?.execution_alerts}
-                      onCheckedChange={() => setUnsavedChanges(true)}
+                      checked={preferences?.notifications.email.executionAlerts ?? true}
+                      onCheckedChange={(checked) => updatePreference('notifications.email.executionAlerts', checked)}
                     />
                     <Label htmlFor="email-execution">Execution alerts</Label>
                   </div>
@@ -202,8 +215,8 @@ export default function SettingsPage() {
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="email-approval"
-                      defaultChecked
-                      onCheckedChange={() => setUnsavedChanges(true)}
+                      checked={preferences?.notifications.email.approvalRequests ?? true}
+                      onCheckedChange={(checked) => updatePreference('notifications.email.approvalRequests', checked)}
                     />
                     <Label htmlFor="email-approval">Approval requests</Label>
                   </div>
@@ -211,8 +224,8 @@ export default function SettingsPage() {
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="email-system"
-                      defaultChecked
-                      onCheckedChange={() => setUnsavedChanges(true)}
+                      checked={preferences?.notifications.email.systemUpdates ?? true}
+                      onCheckedChange={(checked) => updatePreference('notifications.email.systemUpdates', checked)}
                     />
                     <Label htmlFor="email-system">System updates</Label>
                   </div>
@@ -224,8 +237,8 @@ export default function SettingsPage() {
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="push-enabled"
-                      defaultChecked
-                      onCheckedChange={() => setUnsavedChanges(true)}
+                      checked={preferences?.notifications.inApp.enabled ?? true}
+                      onCheckedChange={(checked) => updatePreference('notifications.inApp.enabled', checked)}
                     />
                     <Label htmlFor="push-enabled">Enable push notifications</Label>
                   </div>
@@ -233,8 +246,8 @@ export default function SettingsPage() {
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="sound-enabled"
-                      defaultChecked
-                      onCheckedChange={() => setUnsavedChanges(true)}
+                      checked={preferences?.notifications.inApp.sound ?? true}
+                      onCheckedChange={(checked) => updatePreference('notifications.inApp.sound', checked)}
                     />
                     <Label htmlFor="sound-enabled">Play notification sounds</Label>
                   </div>
@@ -273,19 +286,19 @@ export default function SettingsPage() {
                     id="current-password"
                     type="password"
                     placeholder="Current password"
-                    onChange={() => setUnsavedChanges(true)}
+                    onChange={() => {}}
                   />
                   <Input
                     id="new-password"
                     type="password"
                     placeholder="New password"
-                    onChange={() => setUnsavedChanges(true)}
+                    onChange={() => {}}
                   />
                   <Input
                     id="confirm-password"
                     type="password"
                     placeholder="Confirm new password"
-                    onChange={() => setUnsavedChanges(true)}
+                    onChange={() => {}}
                   />
                 </div>
 
@@ -321,12 +334,14 @@ export default function SettingsPage() {
                   <select
                     id="theme"
                     className="w-full px-3 py-2 border rounded-md bg-background"
-                    defaultValue={(userData as any)?.preferences?.theme || 'light'}
-                    onChange={() => setUnsavedChanges(true)}
+                    value={preferences?.theme || 'light'}
+                    onChange={(e) => updatePreference('theme', e.target.value)}
                   >
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
-                    <option value="auto">System</option>
+                    {getAvailableThemes().map((theme) => (
+                      <option key={theme.id} value={theme.id} disabled={!theme.available}>
+                        {theme.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -335,8 +350,8 @@ export default function SettingsPage() {
                   <select
                     id="font-size"
                     className="w-full px-3 py-2 border rounded-md bg-background"
-                    defaultValue="medium"
-                    onChange={() => setUnsavedChanges(true)}
+                    value={preferences?.fontSize || 'medium'}
+                    onChange={(e) => updatePreference('fontSize', e.target.value)}
                   >
                     <option value="small">Small</option>
                     <option value="medium">Medium</option>
@@ -347,7 +362,8 @@ export default function SettingsPage() {
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="compact-mode"
-                    onCheckedChange={() => setUnsavedChanges(true)}
+                    checked={preferences?.compactMode ?? false}
+                    onCheckedChange={(checked) => updatePreference('compactMode', checked)}
                   />
                   <Label htmlFor="compact-mode">Compact mode</Label>
                 </div>
@@ -355,8 +371,8 @@ export default function SettingsPage() {
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="animations"
-                    defaultChecked
-                    onCheckedChange={() => setUnsavedChanges(true)}
+                    checked={preferences?.animationsEnabled ?? true}
+                    onCheckedChange={(checked) => updatePreference('animationsEnabled', checked)}
                   />
                   <Label htmlFor="animations">Enable animations</Label>
                 </div>
@@ -381,17 +397,18 @@ export default function SettingsPage() {
                   <select
                     id="language"
                     className="w-full px-3 py-2 border rounded-md bg-background"
-                    defaultValue={(userData as any)?.preferences?.language || 'en'}
-                    onChange={() => setUnsavedChanges(true)}
+                    value={preferences?.language || 'en'}
+                    onChange={(e) => updatePreference('language', e.target.value)}
                   >
-                    <option value="en">English</option>
-                    <option value="es">Español</option>
-                    <option value="fr">Français</option>
-                    <option value="de">Deutsch</option>
-                    <option value="zh">中文</option>
-                    <option value="ja">日本語</option>
-                    <option value="ar">العربية</option>
-                    <option value="ur">اردو</option>
+                    {getSupportedLanguages().map((language) => (
+                      <option 
+                        key={language.code} 
+                        value={language.code} 
+                        disabled={!language.available}
+                      >
+                        {language.nativeName}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -400,17 +417,16 @@ export default function SettingsPage() {
                   <select
                     id="timezone"
                     className="w-full px-3 py-2 border rounded-md bg-background"
-                    defaultValue={(userData as any)?.preferences?.timezone || 'UTC'}
-                    onChange={() => setUnsavedChanges(true)}
+                    value={preferences?.timezone || 'UTC'}
+                    onChange={(e) => updatePreference('timezone', e.target.value)}
                   >
-                    <option value="UTC">UTC</option>
-                    <option value="America/New_York">Eastern Time</option>
-                    <option value="America/Chicago">Central Time</option>
-                    <option value="America/Denver">Mountain Time</option>
-                    <option value="America/Los_Angeles">Pacific Time</option>
-                    <option value="Europe/London">London</option>
-                    <option value="Europe/Paris">Paris</option>
-                    <option value="Asia/Tokyo">Tokyo</option>
+                    {getSupportedTimezones()
+                      .sort((a, b) => a.region.localeCompare(b.region))
+                      .map((timezone) => (
+                        <option key={timezone.code} value={timezone.code}>
+                          {timezone.name} ({timezone.offset})
+                        </option>
+                      ))}
                   </select>
                 </div>
 
@@ -419,8 +435,8 @@ export default function SettingsPage() {
                   <select
                     id="date-format"
                     className="w-full px-3 py-2 border rounded-md bg-background"
-                    defaultValue="MM/DD/YYYY"
-                    onChange={() => setUnsavedChanges(true)}
+                    value={preferences?.dateFormat || 'MM/DD/YYYY'}
+                    onChange={(e) => updatePreference('dateFormat', e.target.value)}
                   >
                     <option value="MM/DD/YYYY">MM/DD/YYYY</option>
                     <option value="DD/MM/YYYY">DD/MM/YYYY</option>
@@ -433,8 +449,8 @@ export default function SettingsPage() {
                   <select
                     id="time-format"
                     className="w-full px-3 py-2 border rounded-md bg-background"
-                    defaultValue="12h"
-                    onChange={() => setUnsavedChanges(true)}
+                    value={preferences?.timeFormat || '12h'}
+                    onChange={(e) => updatePreference('timeFormat', e.target.value)}
                   >
                     <option value="12h">12-hour</option>
                     <option value="24h">24-hour</option>
@@ -538,9 +554,14 @@ export default function SettingsPage() {
                     id="cache-ttl"
                     type="number"
                     placeholder="3600"
-                    defaultValue="3600"
-                    onChange={() => setUnsavedChanges(true)}
+                    value={preferences?.advanced.cacheTtl || 3600}
+                    min={60}
+                    max={86400}
+                    onChange={(e) => updatePreference('advanced.cacheTtl', parseInt(e.target.value))}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Range: 60 to 86,400 seconds (1 minute to 24 hours)
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -548,8 +569,8 @@ export default function SettingsPage() {
                   <select
                     id="log-level"
                     className="w-full px-3 py-2 border rounded-md bg-background"
-                    defaultValue="info"
-                    onChange={() => setUnsavedChanges(true)}
+                    value={preferences?.advanced.logLevel || 'info'}
+                    onChange={(e) => updatePreference('advanced.logLevel', e.target.value)}
                   >
                     <option value="debug">Debug</option>
                     <option value="info">Info</option>
@@ -561,19 +582,22 @@ export default function SettingsPage() {
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="telemetry"
-                    defaultChecked
-                    onCheckedChange={() => setUnsavedChanges(true)}
+                    checked={preferences?.advanced.telemetryEnabled ?? true}
+                    onCheckedChange={(checked) => updatePreference('advanced.telemetryEnabled', checked)}
                   />
                   <Label htmlFor="telemetry">Share anonymous usage data</Label>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="experimental"
-                    onCheckedChange={() => setUnsavedChanges(true)}
-                  />
-                  <Label htmlFor="experimental">Enable experimental features</Label>
-                </div>
+                {isFeatureEnabled('experimentalFeatures') && (
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="experimental"
+                      checked={preferences?.advanced.experimentalFeatures ?? false}
+                      onCheckedChange={(checked) => updatePreference('advanced.experimentalFeatures', checked)}
+                    />
+                    <Label htmlFor="experimental">Enable experimental features</Label>
+                  </div>
+                )}
 
                 <div className="pt-4 space-y-2">
                   <Button variant="outline" className="w-full">
@@ -603,10 +627,15 @@ export default function SettingsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your account settings and preferences
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Settings</h1>
+            <p className="text-muted-foreground">
+              Manage your account settings and preferences
+            </p>
+          </div>
+          <StatusIndicator type="backend" showLabel />
+        </div>
       </div>
 
       <div className="grid grid-cols-12 gap-8">
@@ -640,7 +669,7 @@ export default function SettingsPage() {
 
         {/* Main Content */}
         <div className="col-span-12 md:col-span-9">
-          {isLoadingUser ? (
+          {prefsLoading || isLoadingUser ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-muted-foreground">Loading settings...</div>
             </div>
@@ -649,17 +678,22 @@ export default function SettingsPage() {
           )}
 
           {/* Save Bar */}
-          {unsavedChanges && (
+          {hasUnsavedChanges && (
             <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4">
               <div className="container mx-auto flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Info className="h-4 w-4 text-yellow-600" />
-                  <p className="text-sm">You have unsaved changes</p>
+                  <p className="text-sm">
+                    You have unsaved changes
+                    {prefsError && (
+                      <span className="text-red-600 ml-2">- {prefsError}</span>
+                    )}
+                  </p>
                 </div>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    onClick={() => setUnsavedChanges(false)}
+                    onClick={() => window.location.reload()}
                   >
                     Cancel
                   </Button>
@@ -668,7 +702,7 @@ export default function SettingsPage() {
                     disabled={saveSettingsMutation.isPending}
                   >
                     <Save className="h-4 w-4 mr-2" />
-                    Save Changes
+                    {saveSettingsMutation.isPending ? 'Saving...' : 'Save Changes'}
                   </Button>
                 </div>
               </div>

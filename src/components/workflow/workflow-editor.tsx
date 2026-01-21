@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import ReactFlow, {
   Node,
   Edge,
@@ -17,12 +18,15 @@ import ReactFlow, {
   NodeMouseHandler,
 } from 'reactflow';
 import { Button } from '@/components/ui/button';
-import { Save, Play, Trash2 } from 'lucide-react';
+import { Save, Play, Trash2, Loader2 } from 'lucide-react';
 import { useNodeRegistryStore } from '@/stores/node-registry-store';
 import { WorkflowNode as SequbWorkflowNode, NodeType } from '@/types/sequb';
 import { NodePalette } from './node-palette';
 import { CustomNode } from './custom-node';
 import { NodeConfigModal } from './node-config-modal';
+import { api } from '@/lib/api';
+import { logger } from '@/lib/logger';
+import { StatusIndicator } from '@/components/ui/status-indicator';
 
 import 'reactflow/dist/style.css';
 
@@ -34,14 +38,14 @@ interface WorkflowEditorProps {
   workflowId?: string;
   onSave?: (nodes: SequbWorkflowNode[], edges: any[]) => Promise<void>;
   onExecute?: () => Promise<void>;
+  isSaving?: boolean;
+  isExecuting?: boolean;
 }
 
-export function WorkflowEditor({ workflowId, onSave, onExecute }: WorkflowEditorProps) {
+export function WorkflowEditor({ workflowId, onSave, onExecute, isSaving = false, isExecuting = false }: WorkflowEditorProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance>();
-  const [isSaving, setIsSaving] = useState(false);
-  const [isExecuting, setIsExecuting] = useState(false);
   
   // Node configuration modal state
   const [configModalOpen, setConfigModalOpen] = useState(false);
@@ -51,6 +55,73 @@ export function WorkflowEditor({ workflowId, onSave, onExecute }: WorkflowEditor
   
   const { getNodeType } = useNodeRegistryStore();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
+
+  // Load workflow data if editing existing workflow
+  const { data: workflowData, isLoading: isLoadingWorkflow } = useQuery({
+    queryKey: ['workflow', workflowId],
+    queryFn: async () => {
+      if (!workflowId) return null;
+      try {
+        const response = await api.workflows.get(workflowId);
+        return response.data.data;
+      } catch (error) {
+        logger.error('Failed to load workflow:', error);
+        throw error;
+      }
+    },
+    enabled: !!workflowId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Convert workflow data to React Flow nodes and edges
+  useEffect(() => {
+    if (workflowData?.graph) {
+      try {
+        const { nodes: workflowNodes, edges: workflowEdges } = workflowData.graph;
+        
+        // Convert backend nodes to React Flow nodes
+        const reactFlowNodes: Node[] = (workflowNodes?.map((node: SequbWorkflowNode) => {
+          const nodeType = getNodeType(node.type);
+          if (!nodeType) {
+            logger.warn(`Unknown node type: ${node.type}`);
+            return null;
+          }
+
+          return {
+            id: node.id,
+            type: 'customNode',
+            position: node.position || { x: 100, y: 100 },
+            data: {
+              nodeType: nodeType,
+              inputs: node.data || {},
+              label: node.label || nodeType.name,
+              isConfigured: Object.keys(node.data || {}).length > 0,
+            },
+          };
+        }).filter(Boolean) as Node[]) || [];
+
+        // Convert backend edges to React Flow edges
+        const reactFlowEdges: Edge[] = workflowEdges?.map((edge: any) => ({
+          id: edge.id,
+          source: edge.source,
+          target: edge.target,
+          sourceHandle: edge.sourceHandle,
+          targetHandle: edge.targetHandle,
+          label: edge.label,
+        })) || [];
+
+        setNodes(reactFlowNodes);
+        setEdges(reactFlowEdges);
+
+        logger.info('Loaded workflow:', { 
+          nodes: reactFlowNodes.length, 
+          edges: reactFlowEdges.length 
+        });
+      } catch (error) {
+        logger.error('Failed to convert workflow data:', error);
+      }
+    }
+  }, [workflowData, getNodeType, setNodes, setEdges]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -137,7 +208,6 @@ export function WorkflowEditor({ workflowId, onSave, onExecute }: WorkflowEditor
   const handleSave = async () => {
     if (!onSave) return;
 
-    setIsSaving(true);
     try {
       const sequbNodes: SequbWorkflowNode[] = nodes.map(node => ({
         id: node.id,
@@ -159,21 +229,16 @@ export function WorkflowEditor({ workflowId, onSave, onExecute }: WorkflowEditor
       await onSave(sequbNodes, sequbEdges);
     } catch (error) {
       console.error('Failed to save workflow:', error);
-    } finally {
-      setIsSaving(false);
     }
   };
 
   const handleExecute = async () => {
     if (!onExecute) return;
 
-    setIsExecuting(true);
     try {
       await onExecute();
     } catch (error) {
       console.error('Failed to execute workflow:', error);
-    } finally {
-      setIsExecuting(false);
     }
   };
 
@@ -198,6 +263,13 @@ export function WorkflowEditor({ workflowId, onSave, onExecute }: WorkflowEditor
             {workflowId && (
               <span className="text-sm text-muted-foreground">ID: {workflowId}</span>
             )}
+            {isLoadingWorkflow && (
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Loading workflow...</span>
+              </div>
+            )}
+            <StatusIndicator type="backend" />
           </div>
           <div className="flex items-center space-x-2">
             <Button
@@ -230,7 +302,16 @@ export function WorkflowEditor({ workflowId, onSave, onExecute }: WorkflowEditor
         </div>
 
         {/* React Flow */}
-        <div className="flex-1" ref={reactFlowWrapper}>
+        <div className="flex-1 relative" ref={reactFlowWrapper}>
+          {isLoadingWorkflow ? (
+            <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-50">
+              <div className="flex flex-col items-center space-y-3">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Loading workflow data...</p>
+              </div>
+            </div>
+          ) : null}
+          
           <ReactFlow
             nodes={nodes}
             edges={edges}

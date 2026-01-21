@@ -3,20 +3,15 @@
 import { Execution } from '@/types/sequb';
 import { Button } from '@/components/ui/button';
 import { 
-  Play, 
-  Pause, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
   Eye,
   Square,
-  AlertCircle,
   Calendar,
   Timer,
   DollarSign
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDate, formatRelativeTime } from '@/lib/utils';
+import { ExecutionStatusIndicator } from '@/components/ui/execution-status-indicator';
 
 interface ExecutionCardProps {
   execution: Execution;
@@ -32,43 +27,6 @@ export function ExecutionCard({
   isLoading = false
 }: ExecutionCardProps) {
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'running':
-        return <Play className="w-4 h-4 text-blue-600" />;
-      case 'pending':
-        return <Clock className="w-4 h-4 text-yellow-600" />;
-      case 'completed':
-        return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'failed':
-        return <XCircle className="w-4 h-4 text-red-600" />;
-      case 'cancelled':
-        return <Square className="w-4 h-4 text-gray-600" />;
-      case 'waiting_for_approval':
-        return <AlertCircle className="w-4 h-4 text-orange-600" />;
-      default:
-        return <Clock className="w-4 h-4 text-gray-600" />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'running':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'completed':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'failed':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'cancelled':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'waiting_for_approval':
-        return 'bg-orange-100 text-orange-800 border-orange-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
 
   const getDuration = () => {
     const start = new Date(execution.started_at);
@@ -93,17 +51,12 @@ export function ExecutionCard({
       <div className="flex items-center justify-between">
         {/* Left side - Status and basic info */}
         <div className="flex items-center space-x-4 flex-1 min-w-0">
-          <div className="flex items-center space-x-2">
-            {getStatusIcon(execution.status)}
-            <span
-              className={cn(
-                "inline-flex items-center px-2 py-1 rounded-full text-xs border font-medium",
-                getStatusColor(execution.status)
-              )}
-            >
-              {execution.status.replace('_', ' ').toUpperCase()}
-            </span>
-          </div>
+          <ExecutionStatusIndicator 
+            executionId={execution.id}
+            currentStatus={execution.status}
+            showLabel={true}
+            showProgress={execution.status === 'running'}
+          />
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-2">

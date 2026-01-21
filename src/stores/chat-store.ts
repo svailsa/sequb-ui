@@ -52,10 +52,10 @@ export const useChatStore = create<ChatStore>()(
           return newSession.id;
         } catch (error) {
           console.error('Failed to create session:', error);
-          // Fallback to local session
+          // Simplified fallback - create local session with clear offline indicator
           const newSession: ChatSession = {
-            id: Date.now().toString(),
-            title: title || `Chat ${new Date().toLocaleDateString()}`,
+            id: `offline_${Date.now()}`,
+            title: title || `Offline Chat`,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             message_count: 0
@@ -184,12 +184,27 @@ export const useChatStore = create<ChatStore>()(
           }
         } catch (error) {
           console.error('Chat error:', error);
-          // Fallback response
+          
+          // Simplified fallback - just indicate service unavailable
+          let fallbackContent = 'I apologize, but the chat service is currently unavailable. Please try again later.';
+          
+          // Check if it's a network error vs other errors
+          if (error && typeof error === 'object' && 'response' in error) {
+            const statusCode = (error as any).response?.status;
+            if (statusCode === 503) {
+              fallbackContent = 'The chat service is temporarily unavailable for maintenance. Please try again shortly.';
+            } else if (statusCode >= 500) {
+              fallbackContent = 'There was a server error. Our team has been notified and is working to resolve this issue.';
+            }
+          } else if (error && typeof error === 'object' && 'message' in error && (error as any).message.includes('Network Error')) {
+            fallbackContent = 'Unable to connect to the chat service. Please check your internet connection and try again.';
+          }
+          
           const assistantMessage: ChatMessage = {
             id: (Date.now() + 1).toString(),
             session_id: currentSessionId,
             role: 'assistant',
-            content: `I understand you want to: "${content}". Let me help you create a workflow for that.\n\nI'm working on setting up the backend integration. For now, this is a placeholder response. Soon I'll be able to:\n\n• Analyze your request\n• Suggest appropriate workflow nodes\n• Create and execute workflows\n• Monitor execution progress\n\nStay tuned for full functionality!`,
+            content: fallbackContent,
             timestamp: new Date().toISOString(),
           };
           addMessage(assistantMessage);

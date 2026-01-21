@@ -225,4 +225,69 @@ export const api = {
     updateSession: (id: string, data: { title?: string }) =>
       apiClient.patch<ApiResponse<any>>(`/api/v1/chat/sessions/${id}`, data),
   },
+
+  // Metrics
+  metrics: {
+    getOverview: (params: { timeRange: string }) => 
+      apiClient.get<ApiResponse<any>>('/api/v1/metrics/overview', { params }),
+    getExecutionTrends: (params: { timeRange: string }) => 
+      apiClient.get<ApiResponse<any>>('/api/v1/metrics/execution-trends', { params }),
+    getWorkflowDistribution: (params: { timeRange: string }) => 
+      apiClient.get<ApiResponse<any>>('/api/v1/metrics/workflow-distribution', { params }),
+    getPerformance: (params: { timeRange: string }) => 
+      apiClient.get<ApiResponse<any>>('/api/v1/metrics/performance', { params }),
+  },
+
+  // User Preferences
+  preferences: {
+    get: () => 
+      apiClient.get<ApiResponse<any>>('/api/v1/user/preferences'),
+    update: (preferences: Record<string, any>) => 
+      apiClient.put<ApiResponse<any>>('/api/v1/user/preferences', preferences),
+    updatePartial: (preferences: Partial<Record<string, any>>) => 
+      apiClient.patch<ApiResponse<any>>('/api/v1/user/preferences', preferences),
+  },
+
+  // User Profile
+  profile: {
+    update: (profile: Partial<User>) => 
+      apiClient.put<ApiResponse<User>>('/api/v1/user/profile', profile),
+    uploadAvatar: (file: File) => {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      return apiClient.post<ApiResponse<{ url: string }>>('/api/v1/user/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    },
+    changePassword: (data: { currentPassword: string; newPassword: string }) => 
+      apiClient.post<ApiResponse<void>>('/api/v1/user/change-password', data),
+  },
+
+  // UI Configuration
+  ui: {
+    getConfiguration: () => 
+      apiClient.get<ApiResponse<any>>('/api/v1/ui/configuration'),
+    getChatExamples: (context?: string) => 
+      apiClient.get<ApiResponse<any>>('/api/v1/ui/chat/examples', { 
+        params: context ? { context } : undefined 
+      }),
+    getFeatureFlags: () => 
+      apiClient.get<ApiResponse<any>>('/api/v1/ui/feature-flags'),
+    getErrorContext: (errorCode: string, details?: any) => 
+      apiClient.post<ApiResponse<any>>(`/api/v1/ui/errors/${errorCode}`, { details }),
+    getValidationSchema: (entityType: string, entityId?: string) => 
+      apiClient.get<ApiResponse<any>>(`/api/v1/ui/validation/${entityType}${entityId ? `/${entityId}` : ''}`),
+  },
+
+  // System Configuration
+  system: {
+    getConfiguration: () => 
+      apiClient.get<ApiResponse<any>>('/api/v1/system/configuration'),
+    getTimezones: () => 
+      apiClient.get<ApiResponse<any>>('/api/v1/system/timezones'),
+    getLanguages: () => 
+      apiClient.get<ApiResponse<any>>('/api/v1/system/languages'),
+    getThemes: () => 
+      apiClient.get<ApiResponse<any>>('/api/v1/system/themes'),
+  },
 };
