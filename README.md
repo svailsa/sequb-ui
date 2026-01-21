@@ -1,33 +1,33 @@
 # Sequb UI
 
-A web frontend for [Sequb Protocol](../sequb-protocol) workflow orchestration system.
+Web frontend for the [Sequb Protocol](../sequb-protocol) workflow orchestration system.
 
 ## Overview
 
-Sequb UI is a browser-based interface for creating and managing workflows. It provides a chat interface for natural language interactions and traditional workflow management tools. Built with Next.js 14 and TypeScript.
+Sequb UI provides a browser interface for creating and managing workflows through both a chat interface and visual workflow editor. Built with Next.js 14 and TypeScript.
 
 ## Features
 
-- **Chat Interface**: Chat interface with session management and history
+- **Chat Interface**: Session management with persistent history
 - **Visual Workflow Editor**: Drag-and-drop workflow builder using React Flow
-- **Dynamic Node Registry**: Loading of node types from backend with fallback support
-- **Real-time Updates**: WebSocket integration for execution monitoring
-- **Internationalization**: Support for 8 languages including RTL (Arabic, Urdu)
-- **Authentication**: Login/register pages with MFA/TOTP support
-- **Plugin System**: Plugin upload and management interface
-- **Backend Integration**: API client for sequb-protocol endpoints
-- **TypeScript**: Type safety with strict mode
-- **State Management**: Zustand stores with localStorage persistence and React Query caching
+- **Node Registry**: Dynamic loading from backend with offline fallback
+- **Real-time Updates**: WebSocket integration for execution status
+- **Backend-Driven Architecture**: Configuration, preferences, and UI options from server
+- **Status Monitoring**: System health and execution status indicators
+- **Authentication**: Login/register with MFA/TOTP support
+- **Plugin System**: Upload and management interface
+- **Internationalization**: Multi-language support (8 languages)
+- **User Preferences**: Backend-synchronized settings management
 
 ## Technology Stack
 
 - **Framework**: Next.js 14 with App Router
-- **Language**: TypeScript 5.7+ with strict mode
-- **Styling**: Tailwind CSS with CSS variables
-- **UI Components**: Custom components with shadcn/ui patterns  
+- **Language**: TypeScript with strict mode
+- **Styling**: Tailwind CSS
+- **UI Components**: Custom components following shadcn/ui patterns  
 - **State Management**: Zustand for client state, TanStack Query for server state
-- **API Client**: Axios with interceptors for auth and error handling
-- **Workflow Editor**: React Flow for visual workflow building
+- **API Client**: Axios with auth interceptors
+- **Workflow Editor**: React Flow
 
 ## Project Structure
 
@@ -133,23 +133,22 @@ The frontend includes an API client with endpoints for:
 
 The frontend includes fallback to mock data when the backend is unavailable.
 
-## Architecture Principles
+## Architecture
 
 ### Design Principles
 
-- **Backend-Driven**: Node definitions and configuration loaded from server registry
-- **Type Safety**: TypeScript with strict mode enabled
-- **Fallback Support**: Mock data when backend unavailable
-- **State Persistence**: Chat history and user preferences saved locally
-- **Internationalization**: Multi-language support with RTL capabilities
+- **Backend-Driven**: Configuration, preferences, and UI options from server
+- **Type Safety**: TypeScript strict mode
+- **Progressive Enhancement**: Fallback to defaults when backend unavailable
+- **State Persistence**: Local storage for offline capability
 
-### Technical Features
+### Key Implementation Features
 
-- **TanStack Query**: Server state caching and invalidation
-- **Code Splitting**: Next.js bundle optimization
-- **Error Handling**: Retry logic with exponential backoff
-- **WebSocket Integration**: Real-time updates for executions
-- **Form Validation**: Input validation with error feedback
+- **UI Configuration Store**: Backend-driven configuration management
+- **Preferences System**: Synchronized user settings with backend
+- **Status Monitoring**: Real-time health and execution status
+- **Feature Flags**: Backend-controlled feature toggles
+- **Dynamic Options**: Languages, timezones, and themes from server
 
 ## Deployment
 
@@ -182,27 +181,28 @@ npm run dev
 - `NEXT_PUBLIC_WS_URL` - WebSocket server URL  
 - `NODE_ENV` - Environment (development/production)
 
-## Current Status
+## Implementation Status
 
-### Implemented Features
-- **Core Pages**: All main application pages (chat, workflows, executions, templates, settings, etc.)
-- **Chat Interface**: Chat interface with session management and history persistence
-- **Workflow Editor**: React Flow-based drag-and-drop workflow builder with node configuration
-- **Node Registry**: Dynamic loading from backend with mock data fallback
-- **Authentication**: Login/register pages with MFA/TOTP setup components
-- **Internationalization**: 8 language support with language selector
-- **WebSocket Integration**: Real-time updates for execution monitoring
-- **Plugin System**: Plugin upload and management interface
-- **Approval Workflows**: Approval request handling and response UI
-- **Webhook Management**: CRUD operations for webhook configuration
-- **Metrics Dashboard**: Performance monitoring and statistics visualization
-- **API Integration**: Client covering all backend endpoints with error handling
+### Completed Features
+- Chat interface with session management
+- Visual workflow editor with React Flow
+- Backend-driven UI configuration system
+- User preferences with backend synchronization
+- Real-time status indicators
+- Authentication flow (login/register/MFA)
+- Plugin upload and management
+- Execution monitoring with WebSocket updates
+- Metrics dashboard with API integration
+- Settings page with dynamic options
+- Internationalization support
 
-### Backend Integration Status
-- API client connects to backend when available
-- Fallback to mock data for development without backend
-- WebSocket connection for real-time updates
-- JWT authentication with token management
+### Backend Integration
+- API client with all endpoints implemented
+- Fallback data for offline development
+- WebSocket service for real-time updates
+- Bearer token authentication
+- CSRF protection
+- Health monitoring with status indicators
 
 ## Contributing
 
@@ -213,17 +213,16 @@ npm run dev
 5. Write descriptive commit messages
 6. Test on multiple browsers and screen sizes
 
-## Development Roadmap
+## Future Development
 
-### Potential Enhancements
-- Enhanced workflow versioning and branching
-- Collaborative editing features
-- Advanced analytics and reporting
-- Mobile application development
-- Offline mode support
-- Custom node development SDK
-- Enterprise SSO integration
-- Advanced permission management
+### Planned Enhancements
+- Workflow versioning
+- Collaborative editing
+- Enhanced offline support
+- Mobile responsive improvements
+- Advanced permission system
+- Custom node development
+- SSO integration
 
 ## License
 

@@ -1,39 +1,28 @@
-# Sequb UI - Development Context for Claude
+# Sequb UI - Development Context
 
 ## Project Overview
 
-Sequb UI is a web frontend for the Sequb Protocol workflow orchestration system. It provides a browser-based interface for creating and managing workflows through a chat interface and traditional workflow management tools.
+Sequb UI is the web frontend for the Sequb Protocol workflow orchestration system. It provides a browser interface for workflow creation and management through both chat and visual editor interfaces.
 
 ## Current Status
 
-**Architecture**: Next.js 14 with App Router, TypeScript, and Tailwind CSS
-**Development Stage**: All major features implemented with backend integration
-**Backend Integration**: API client with fallback to mock data
-**Key Features Implemented**: Chat interface with history, visual workflow editor, dynamic node registry, authentication, i18n, plugin system, approval workflows, webhooks, metrics dashboard
+- **Framework**: Next.js 14 with App Router
+- **Language**: TypeScript with strict mode
+- **Styling**: Tailwind CSS
+- **State**: Zustand + TanStack Query
+- **Backend Integration**: Full API client with offline fallback
 
 ## Technology Stack
 
-### Core Framework
-- **Next.js**: 14.x with App Router
-- **TypeScript**: 5.7+ with strict mode enabled
-- **React**: 18.3.1
-
-### Styling and UI
-- **Tailwind CSS**: 3.4+ with custom CSS variables
-- **UI Components**: Custom components following shadcn/ui patterns
-- **Icons**: Lucide React
-
-### State Management
-- **TanStack Query**: For server state management and caching
-- **Zustand**: Implemented for chat sessions and node registry state
-
-### API Integration
+- **Next.js 14**: App Router for routing
+- **React 18.3.1**: UI library
+- **TypeScript**: Type safety with strict mode
+- **Tailwind CSS**: Utility-first styling
+- **Zustand**: Client state management
+- **TanStack Query**: Server state and caching
+- **React Flow**: Workflow editor visualization
 - **Axios**: HTTP client with interceptors
-- **Type Safety**: Full TypeScript coverage for API responses
-
-### Development Tools
-- **ESLint**: Code linting with Next.js config
-- **PostCSS**: CSS processing with autoprefixer
+- **Lucide React**: Icon library
 
 ## Project Structure
 
@@ -79,66 +68,52 @@ sequb-ui/
 └── tsconfig.json             # TypeScript config
 ```
 
-## Key Files and Their Purpose
+## Key Files
 
-### Core Application Files
-- `src/app/layout.tsx`: Root layout with providers (i18n, Query, WebSocket)
-- `src/app/page.tsx`: Main page with chat interface
-- `src/app/globals.css`: Global styles with CSS custom properties
-
-### Key Components
-- `src/components/chat/chat-interface.tsx`: Chat interface with message handling
-- `src/components/workflow/workflow-editor.tsx`: Visual workflow editor
-- `src/components/execution/execution-list.tsx`: Execution monitoring
-- `src/components/plugin/plugin-manager.tsx`: Plugin management
-- `src/components/auth/mfa-setup.tsx`: MFA/TOTP setup flow
-
-### Core Services
-- `src/lib/api.ts`: API client with all endpoints
-- `src/lib/i18n.ts`: Internationalization service
-- `src/lib/websocket.ts`: WebSocket connection service
+### Core Files
+- `src/app/layout.tsx`: Root layout with provider hierarchy
+- `src/app/page.tsx`: Home page with chat interface
+- `src/lib/api.ts`: Centralized API client
 - `src/types/sequb.ts`: TypeScript type definitions
 
-## Implementation Details
+### Key Stores
+- `src/stores/ui-configuration-store.ts`: Backend-driven UI config
+- `src/stores/preferences-store.ts`: User preferences management
+- `src/stores/status-store.ts`: System and execution status
+- `src/stores/chat-store.ts`: Chat session management
+- `src/stores/node-registry-store.ts`: Workflow node types
 
-### Chat Interface
-- Chat interface with welcome screen and examples
-- Zustand store for session management with localStorage persistence
-- API integration with fallback to mock responses
-- Auto-resizing textarea with loading states
-- Chat history sidebar with CRUD operations
+### Key Components
+- `src/components/chat/chat-interface.tsx`: Chat UI
+- `src/components/workflow/workflow-editor.tsx`: Visual workflow editor
+- `src/components/ui/status-indicator.tsx`: Health monitoring
+- `src/components/providers/*`: Context providers
 
-### API Client Structure
-The API client (`src/lib/api.ts`) includes endpoints for:
-- Health checks
-- Chat sessions and messages
-- Authentication (login, register, profile)
-- Workflow CRUD operations
-- Execution monitoring
-- Dynamic node registry access
-- Plugin management
-- Webhooks configuration
-- Approval workflows
-- Internationalization
+## Current Implementation
 
-### Styling Approach
-- Tailwind CSS with custom CSS variables for theming
-- Light mode implemented with dark mode infrastructure
-- Responsive design approach
-- Component-based styling patterns
+### Backend-Driven Architecture
+- UI configuration loaded from server on startup
+- User preferences synchronized with backend
+- Dynamic language/timezone/theme options
+- Feature flags for controlled rollouts
+- Chat examples from backend configuration
+- Validation limits from server
 
-### State Management
-- TanStack Query for server state with caching
-- Zustand stores for chat sessions and node registry
-- localStorage persistence for chat history and user preferences
-- Error handling with retry logic for transient failures
+### State Management Pattern
+- **Zustand Stores**: Client state (chat, preferences, UI config, status)
+- **TanStack Query**: Server state with caching
+- **localStorage**: Offline persistence
+- **Context Providers**: Cross-cutting concerns
 
-### Visual Workflow Editor
-- React Flow drag-and-drop interface
-- Dynamic node palette with search and categorization
-- Custom node components with TypeScript types
-- Node configuration modal with dynamic forms
-- Workflow save and execute functionality
+### Key Features Implemented
+- Chat interface with session persistence
+- Visual workflow editor with React Flow
+- Real-time status monitoring (WebSocket)
+- Backend-driven settings page
+- Metrics dashboard with live data
+- Authentication with MFA support
+- Plugin upload and management
+- Execution monitoring with progress tracking
 
 ## Development Workflow
 
@@ -179,25 +154,25 @@ The frontend expects a sequb-protocol server running on the configured API URL w
 - Automatic redirect on 401 responses
 - Request interceptors add Authorization header
 
-## Current Implementation Status
+## Implementation Status
 
-### Completed Features
-- Authentication with login/register pages
-- MFA/TOTP setup and verification
-- Dynamic form generation for node configuration
-- Real-time execution monitoring with WebSockets
-- Plugin management interface with upload
-- Approval workflows with response handling
-- Webhook management with event subscriptions
-- Metrics dashboard with performance monitoring
-- Internationalization with 8 languages
-- Template library with import/export
+### Working Features
+- Authentication flow (login/register/MFA)
+- Chat interface with history
+- Workflow editor with node configuration
+- Real-time execution monitoring
+- Backend-driven UI configuration
+- User preferences synchronization
+- Status indicators and health monitoring
+- Metrics dashboard with API data
+- Plugin upload interface
+- Settings page with dynamic options
 
-### Known Limitations
-- Backend required for full functionality
-- Mock data used when backend unavailable
-- Social authentication UI present but not connected
-- Some advanced workflow features pending backend support
+### Current Limitations
+- Requires backend for full functionality
+- Falls back to minimal data when offline
+- Social auth UI not connected
+- Some workflow features need backend support
 
 ## Development Guidelines
 

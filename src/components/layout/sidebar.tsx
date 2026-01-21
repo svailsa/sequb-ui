@@ -13,31 +13,57 @@ import {
   Folder,
   ChevronDown,
   ChevronRight,
-  Loader2
+  Loader2,
+  Webhook,
+  CheckCircle,
+  BarChart3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNodeRegistryStore } from "@/stores/node-registry-store";
+import { useUIConfigurationStore } from "@/stores/ui-configuration-store";
 
-const mainSidebarItems = [
+const allSidebarItems = [
   {
     label: "Workflows",
     icon: Workflow,
     href: "/workflows",
+    featureFlag: null, // Always shown
   },
   {
     label: "Executions",
     icon: Play,
     href: "/executions",
+    featureFlag: null, // Always shown
   },
   {
     label: "Templates",
     icon: Folder,
     href: "/templates",
+    featureFlag: "templateLibrary",
+  },
+  {
+    label: "Metrics",
+    icon: BarChart3,
+    href: "/metrics",
+    featureFlag: "advancedMetrics",
+  },
+  {
+    label: "Webhooks",
+    icon: Webhook,
+    href: "/webhooks",
+    featureFlag: "webhookSupport",
+  },
+  {
+    label: "Approvals",
+    icon: CheckCircle,
+    href: "/approvals",
+    featureFlag: "approvalWorkflows",
   },
   {
     label: "Settings",
     icon: Settings,
     href: "/settings",
+    featureFlag: null, // Always shown
   },
 ];
 
@@ -47,6 +73,12 @@ export function Sidebar() {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   
   const { categories, nodeTypes, isLoading, loadRegistry, getNodesByCategory } = useNodeRegistryStore();
+  const { isFeatureEnabled } = useUIConfigurationStore();
+  
+  // Filter sidebar items based on feature flags
+  const mainSidebarItems = allSidebarItems.filter(item => 
+    !item.featureFlag || isFeatureEnabled(item.featureFlag)
+  );
 
   useEffect(() => {
     loadRegistry();

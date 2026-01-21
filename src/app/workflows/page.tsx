@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { api } from "@/lib/api";
 import { logger } from "@/lib/logger";
+import { validateWorkflow, formatValidationErrors } from "@/lib/validation";
 
 type ViewMode = 'list' | 'editor' | 'view';
 
@@ -41,6 +42,14 @@ export default function WorkflowsPage() {
           })),
         },
       };
+
+      // Validate workflow against backend schema
+      const validation = await validateWorkflow(workflowData);
+      if (!validation.valid) {
+        const errorMessage = formatValidationErrors(validation.errors);
+        logger.error('Workflow validation failed:', errorMessage);
+        throw new Error(`Validation failed:\n${errorMessage}`);
+      }
 
       if (selectedWorkflow?.id) {
         // Update existing workflow
