@@ -1,229 +1,316 @@
 # Sequb UI
 
-Web frontend for the [Sequb Protocol](../sequb-protocol) workflow orchestration system.
+Modern web frontend for the [Sequb Protocol](../sequb-protocol) workflow orchestration system.
 
 ## Overview
 
-Sequb UI provides a browser interface for creating and managing workflows through both a chat interface and visual workflow editor. Built with Next.js 14 and TypeScript.
+Sequb UI provides a comprehensive browser-based interface for creating, managing, and monitoring workflows. It features both a conversational chat interface and a visual drag-and-drop workflow editor, built with Next.js 14, TypeScript, and React Flow.
 
-## Features
+## Key Features
 
-- **Chat Interface**: Session management with persistent history
-- **Visual Workflow Editor**: Drag-and-drop workflow builder using React Flow
-- **Node Registry**: Dynamic loading from backend with offline fallback
-- **Real-time Updates**: WebSocket integration for execution status
-- **Backend-Driven Architecture**: Configuration, preferences, and UI options from server
-- **Status Monitoring**: System health and execution status indicators
-- **Authentication**: Login/register with MFA/TOTP support
-- **Plugin System**: Upload and management interface
-- **Internationalization**: Multi-language support (8 languages)
-- **User Preferences**: Backend-synchronized settings management
+### Core Functionality
+- **Chat Interface**: AI-powered conversational workflow creation with session persistence
+- **Visual Workflow Editor**: Drag-and-drop interface using React Flow
+- **Real-time Monitoring**: Live execution tracking via WebSocket
+- **Backend-Driven Architecture**: Dynamic UI configuration and feature flags
+
+### Advanced Features
+- **Authentication**: Secure login/register with MFA/TOTP support
+- **Multi-language Support**: 8 languages with RTL support
+- **Offline Capabilities**: Progressive enhancement with queue management
+- **Plugin System**: Upload and manage custom workflow nodes
+- **Approval Workflows**: Multi-step approval chains
+- **Webhook Integration**: Event-driven workflow triggers
+- **Metrics Dashboard**: Performance monitoring and analytics
 
 ## Technology Stack
 
-- **Framework**: Next.js 14 with App Router
-- **Language**: TypeScript with strict mode
-- **Styling**: Tailwind CSS
-- **UI Components**: Custom components following shadcn/ui patterns  
-- **State Management**: Zustand for client state, TanStack Query for server state
-- **API Client**: Axios with auth interceptors
-- **Workflow Editor**: React Flow
+| Category | Technologies |
+|----------|-------------|
+| **Framework** | Next.js 14 (App Router), React 18.3, TypeScript 5.7+ |
+| **Styling** | Tailwind CSS, shadcn/ui patterns |
+| **State Management** | Zustand (client), TanStack Query (server) |
+| **API Integration** | Axios with interceptors, WebSocket |
+| **Workflow Visualization** | React Flow |
+| **Security** | CSRF protection, rate limiting, secure storage |
+
+## Quick Start
+
+### Prerequisites
+- Node.js 18.17 or higher
+- npm 9+
+- Running [sequb-protocol](../sequb-protocol) backend
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/your-org/sequb-ui.git
+cd sequb-ui
+
+# Install dependencies
+npm install
+
+# Configure environment
+cp .env.example .env.local
+# Edit .env.local with your backend URL:
+# NEXT_PUBLIC_API_URL=http://localhost:8080
+
+# Start development server
+npm run dev
+```
+
+Visit http://localhost:3000 to access the application.
 
 ## Project Structure
 
 ```
 src/
-├── app/                    # Next.js App Router pages
-│   ├── approvals/         # Approval management page
-│   ├── executions/        # Execution monitoring page  
-│   ├── login/             # Authentication login page
-│   ├── metrics/           # Metrics dashboard page
-│   ├── register/          # User registration page
-│   ├── settings/          # User settings page
-│   ├── templates/         # Template library page
-│   ├── webhooks/          # Webhook management page
-│   ├── workflows/         # Workflow editor page
-│   └── page.tsx           # Home page with chat interface
-├── components/
-│   ├── auth/              # Authentication components (MFA, guards)
-│   ├── chat/              # Chat interface and history sidebar
-│   ├── execution/         # Execution list and details
-│   ├── layout/            # Header, sidebar with dynamic node registry
-│   ├── plugin/            # Plugin manager and upload
-│   ├── providers/         # React providers (Query, WebSocket, i18n)
-│   ├── settings/          # Settings and preferences components
-│   ├── template/          # Template gallery components
-│   ├── ui/                # Reusable UI components
-│   └── workflow/          # Workflow editor, node palette, config modal
-├── lib/
-│   ├── api.ts             # API client and endpoints
-│   ├── i18n.ts            # Internationalization service
-│   ├── utils.ts           # Utility functions
-│   └── websocket.ts       # WebSocket service
-├── providers/
-│   └── i18n-provider.tsx  # i18n React context provider
-├── types/
-│   └── sequb.ts           # TypeScript type definitions
-├── hooks/                 # Custom React hooks
-└── stores/                # Zustand stores for chat and node registry
+├── app/                    # Next.js pages
+├── components/            # React components
+│   ├── ui/               # Reusable UI components
+│   ├── auth/             # Authentication components
+│   ├── chat/             # Chat interface
+│   ├── workflow/         # Workflow editor
+│   └── providers/        # React context providers
+├── services/             # Business logic
+│   ├── api/             # API client
+│   ├── auth/            # Authentication services
+│   ├── monitoring/      # Logging and errors
+│   └── websocket/       # Real-time communication
+├── stores/              # Zustand state stores
+├── lib/utils/           # Utility functions
+└── types/               # TypeScript definitions
 ```
 
-## Development
+## Available Scripts
 
-### Prerequisites
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server (port 3000) |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npm run typecheck` | Check TypeScript compilation |
 
-- Node.js 18.17+ 
-- npm 9+
-- [sequb-protocol](../sequb-protocol) backend running
+## Backend Integration
 
-### Setup
+### Required Endpoints
 
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+The frontend expects these API endpoints from sequb-protocol:
 
-2. **Configure environment:**
-   ```bash
-   cp .env.example .env.local
-   # Edit .env.local to match your sequb-protocol backend URL
-   ```
-
-3. **Start development server:**
-   ```bash
-   npm run dev
-   ```
-
-4. **Open application:**
-   Visit http://localhost:3000
-
-### Available Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
-- `npm run typecheck` - Run TypeScript compiler check
-
-## Integration with sequb-protocol
-
-The frontend is designed to integrate seamlessly with the sequb-protocol backend:
-
-### API Integration
-
-- **Base URL**: Configurable via `NEXT_PUBLIC_API_URL` (default: http://localhost:3000)
-- **Authentication**: Bearer token with automatic refresh
-- **Error Handling**: Automatic retry with exponential backoff
-- **Type Safety**: Full TypeScript coverage matching backend schemas
-
-### API Endpoints
-
-The frontend includes an API client with endpoints for:
-- Health checks (`/api/v1/health`)
-- Chat sessions and messages (`/api/v1/chat/*`) 
-- Workflow operations (`/api/v1/workflows/*`)
-- Execution monitoring (`/api/v1/executions/*`)
-- Dynamic node registry (`/api/v1/nodes/registry`)
-- Authentication (`/api/v1/auth/*`)
-- Plugin management (`/api/v1/plugins/*`)
-- Approval workflows (`/api/v1/approvals/*`)
-- Webhook configuration (`/api/v1/webhooks/*`)
-- Internationalization (`/api/v1/i18n/*`)
-- WebSocket connections (`/api/v1/ws/*`)
-
-The frontend includes fallback to mock data when the backend is unavailable.
-
-## Architecture
-
-### Design Principles
-
-- **Backend-Driven**: Configuration, preferences, and UI options from server
-- **Type Safety**: TypeScript strict mode
-- **Progressive Enhancement**: Fallback to defaults when backend unavailable
-- **State Persistence**: Local storage for offline capability
-
-### Key Implementation Features
-
-- **UI Configuration Store**: Backend-driven configuration management
-- **Preferences System**: Synchronized user settings with backend
-- **Status Monitoring**: Real-time health and execution status
-- **Feature Flags**: Backend-controlled feature toggles
-- **Dynamic Options**: Languages, timezones, and themes from server
-
-## Deployment
-
-### Development
-
-Run alongside sequb-protocol:
-```bash
-# Terminal 1: Start backend
-cd ../sequb-protocol && cargo run --bin sequb-server
-
-# Terminal 2: Start frontend  
-npm run dev
+```
+GET  /api/v1/health              # Health check
+GET  /api/v1/nodes/registry      # Available node types
+POST /api/v1/workflows           # Create workflow
+GET  /api/v1/workflows           # List workflows
+POST /api/v1/workflows/:id/execute # Execute workflow
+GET  /api/v1/executions/:id     # Execution status
+GET  /api/v1/ui/configuration   # UI configuration
+GET  /api/v1/user/preferences   # User preferences
 ```
 
-### Production
+### WebSocket Events
 
-1. **Build application:**
-   ```bash
-   npm run build
-   ```
+```javascript
+// Real-time events
+- execution_update   # Execution progress
+- workflow_event    # Workflow state changes
+- system_status     # Backend health
+```
 
-2. **Start production server:**
-   ```bash
-   npm run start
-   ```
+## Configuration
 
 ### Environment Variables
 
-- `NEXT_PUBLIC_API_URL` - Backend API base URL
-- `NEXT_PUBLIC_WS_URL` - WebSocket server URL  
-- `NODE_ENV` - Environment (development/production)
+```env
+# Required
+NEXT_PUBLIC_API_URL=http://localhost:8080
 
-## Implementation Status
+# Optional
+NEXT_PUBLIC_WS_URL=ws://localhost:8080
+NODE_ENV=development
+```
 
-### Completed Features
-- Chat interface with session management
-- Visual workflow editor with React Flow
-- Backend-driven UI configuration system
-- User preferences with backend synchronization
-- Real-time status indicators
-- Authentication flow (login/register/MFA)
-- Plugin upload and management
-- Execution monitoring with WebSocket updates
-- Metrics dashboard with API integration
-- Settings page with dynamic options
-- Internationalization support
+### Backend-Driven Configuration
 
-### Backend Integration
-- API client with all endpoints implemented
-- Fallback data for offline development
-- WebSocket service for real-time updates
-- Bearer token authentication
-- CSRF protection
-- Health monitoring with status indicators
+The UI automatically fetches configuration from the backend:
+- Feature flags
+- UI limits and timeouts
+- Available languages and timezones
+- Chat examples and prompts
+- Workflow constraints
+
+## Architecture Highlights
+
+### Backend-Driven Design
+- UI configuration loaded from server
+- Dynamic feature toggles
+- Backend validation schemas
+- Synchronized user preferences
+
+### Progressive Enhancement
+- Offline detection and queuing
+- Connection quality monitoring
+- Fallback to cached data
+- Graceful feature degradation
+
+### Security Features
+- CSRF token protection
+- Client-side rate limiting
+- Input sanitization
+- Secure token storage
+- XSS prevention
+
+## Development Guide
+
+### Code Standards
+
+```typescript
+// TypeScript strict mode - no 'any' types
+interface Props {
+  data: WorkflowData; // Properly typed
+  onSave: (data: WorkflowData) => Promise<void>;
+}
+
+// Use barrel exports
+import { Button, Card } from '@/components/ui';
+
+// Handle errors with fallbacks
+try {
+  const data = await api.workflows.get(id);
+  return data;
+} catch (error) {
+  logger.error('Failed to fetch workflow', error);
+  return fallbackData;
+}
+```
+
+### Adding Features
+
+1. **New Service**: Create in `src/services/`
+2. **New Component**: Add to appropriate `src/components/` subdirectory
+3. **New API Endpoint**: Update `src/services/api/client.ts`
+4. **New Store**: Create in `src/stores/` using Zustand
+
+## Deployment
+
+### Production Build
+
+```bash
+# Build the application
+npm run build
+
+# Start production server
+npm run start
+
+# Or deploy to Vercel/Netlify
+```
+
+### Docker Deployment
+
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+RUN npm run build
+EXPOSE 3000
+CMD ["npm", "start"]
+```
+
+### Regional Deployment
+
+Sequb UI supports island architecture for geographic distribution:
+
+```env
+# US Instance
+NEXT_PUBLIC_API_URL=https://us.sequb.com
+NEXT_PUBLIC_REGION=us
+
+# EU Instance
+NEXT_PUBLIC_API_URL=https://eu.sequb.com
+NEXT_PUBLIC_REGION=eu
+```
+
+## Testing
+
+### Current Testing
+- TypeScript compilation checks
+- ESLint code quality
+- Build-time validation
+
+### Planned Testing
+- Unit tests (Jest)
+- Component tests (React Testing Library)
+- E2E tests (Playwright)
+- Performance tests (Lighthouse)
 
 ## Contributing
 
-1. Follow TypeScript strict mode - no `any` types
-2. Use provided UI components for consistency
-3. Add proper error handling for all API calls
-4. Include loading states for async operations
-5. Write descriptive commit messages
-6. Test on multiple browsers and screen sizes
+We welcome contributions! Please follow these guidelines:
 
-## Future Development
+1. **Fork the repository**
+2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
+3. **Follow code standards** (TypeScript strict, no `any`)
+4. **Write tests** for new features
+5. **Update documentation** as needed
+6. **Submit a pull request**
 
-### Planned Enhancements
-- Workflow versioning
-- Collaborative editing
-- Enhanced offline support
-- Mobile responsive improvements
-- Advanced permission system
-- Custom node development
-- SSO integration
+### Commit Convention
+
+```
+feat: Add new feature
+fix: Fix bug
+docs: Update documentation
+style: Format code
+refactor: Refactor code
+test: Add tests
+chore: Update dependencies
+```
+
+## Roadmap
+
+### Version 1.1 (Q1 2024)
+- [ ] Automated testing suite
+- [ ] Performance monitoring
+- [ ] Enhanced offline mode
+- [ ] Mobile responsive improvements
+
+### Version 1.2 (Q2 2024)
+- [ ] Workflow versioning
+- [ ] Collaborative editing
+- [ ] Advanced analytics
+- [ ] Custom node SDK
+
+### Future
+- [ ] Mobile application
+- [ ] Desktop application
+- [ ] AI-powered optimization
+- [ ] Enterprise features
+
+## Support
+
+### Documentation
+- [Development Guide](./CLAUDE.md) - Detailed development documentation
+- [Architecture Review](./ARCHITECTURE_REVIEW.md) - System architecture
+- [API Documentation](../sequb-protocol/docs/api.md) - Backend API reference
+
+### Getting Help
+- **Issues**: [GitHub Issues](https://github.com/your-org/sequb-ui/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-org/sequb-ui/discussions)
+- **Email**: support@sequb.io
 
 ## License
 
-This project is part of the Sequb Protocol workspace and follows the same MIT OR Apache-2.0 dual license.
+This project is part of the Sequb Protocol workspace and is dual-licensed:
+
+- MIT License ([LICENSE-MIT](LICENSE-MIT))
+- Apache License 2.0 ([LICENSE-APACHE](LICENSE-APACHE))
+
+You may choose either license for your use.
+
+---
+
+Built with ❤️ by the Sequb team
