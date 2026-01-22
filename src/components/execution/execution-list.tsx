@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ExecutionCard } from './execution-card';
-import { api } from '@/lib/api';
+import { api } from '@/services/api';
 import { Execution, PaginatedResponse } from '@/types/sequb';
 import { Search, Filter, Loader2, RefreshCw } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

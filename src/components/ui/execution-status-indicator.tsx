@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/cn';
 import { useStatusStore } from '@/stores/status-store';
 import { Play, Clock, CheckCircle, XCircle, Square, Loader2, AlertCircle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';

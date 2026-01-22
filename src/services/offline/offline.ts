@@ -1,4 +1,4 @@
-import { logger } from '@/lib/logger';
+import { logger } from '@/services/monitoring/logger';
 
 export interface OfflineState {
   isOnline: boolean;

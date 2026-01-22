@@ -4,8 +4,8 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
-import { getErrorContext, formatErrorForUser, ErrorContext } from '@/lib/error-context';
-import { logger } from '@/lib/logger';
+import { getErrorContext, formatErrorForUser, ErrorContext } from '@/services/monitoring/error-context';
+import { logger } from '@/services/monitoring/logger';
 
 interface Props {
   children: ReactNode;

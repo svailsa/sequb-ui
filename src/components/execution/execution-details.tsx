@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Execution, ExecutionLog } from '@/types/sequb';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { api } from '@/lib/api';
+import { api } from '@/services/api';
 import { useExecutionMonitor } from '@/hooks/use-websocket';
 import { 
   Play, 
@@ -22,8 +22,8 @@ import {
   RefreshCw,
   Loader2
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { formatDate } from '@/lib/utils';
+import { cn } from '@/lib/utils/cn';
+import { formatDate } from '@/lib/utils/cn';
 
 interface ExecutionDetailsProps {
   execution: Execution;

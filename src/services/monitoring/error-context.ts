@@ -1,5 +1,5 @@
-import { api } from '@/lib/api';
-import { logger } from '@/lib/logger';
+import { api } from '@/services/api';
+import { logger } from './logger';
 
 export interface ErrorContext {
   code: string;

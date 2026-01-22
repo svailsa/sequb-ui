@@ -11,8 +11,8 @@ import {
   ApiResponse,
   PaginatedResponse 
 } from '@/types/sequb';
-import { authService } from './auth-service';
-import { csrfService } from './csrf';
+import { authService } from '../auth/auth-service';
+import { csrfService } from '../auth/csrf';
 
 // Create axios instance
 export const apiClient = axios.create({

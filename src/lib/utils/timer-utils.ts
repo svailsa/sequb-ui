@@ -3,7 +3,7 @@
  * Prevents timer-based vulnerabilities by validating and capping delays
  */
 
-import { logger } from './logger';
+import { logger } from '@/services/monitoring/logger';
 
 interface SafeTimerOptions {
   maxDelay?: number;

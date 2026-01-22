@@ -24,8 +24,8 @@ import { WorkflowNode as SequbWorkflowNode, NodeType } from '@/types/sequb';
 import { NodePalette } from './node-palette';
 import { CustomNode } from './custom-node';
 import { NodeConfigModal } from './node-config-modal';
-import { api } from '@/lib/api';
-import { logger } from '@/lib/logger';
+import { api } from '@/services/api';
+import { logger } from '@/services/monitoring/logger';
 import { StatusIndicator } from '@/components/ui/status-indicator';
 
 import 'reactflow/dist/style.css';

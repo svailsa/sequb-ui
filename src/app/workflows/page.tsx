@@ -7,9 +7,9 @@ import { WorkflowEditorWithProvider } from "@/components/workflow/workflow-edito
 import { Workflow } from "@/types/sequb";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { api } from "@/lib/api";
-import { logger } from "@/lib/logger";
-import { validateWorkflow, formatValidationErrors } from "@/lib/validation";
+import { api } from "@/services/api";
+import { logger } from "@/services/monitoring/logger";
+import { validateWorkflow, formatValidationErrors } from "@/services/validation/validation";
 
 type ViewMode = 'list' | 'editor' | 'view';
 

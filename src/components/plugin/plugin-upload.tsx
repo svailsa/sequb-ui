@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { api } from '@/services/api';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +19,7 @@ import {
   FileCode,
   Package
 } from 'lucide-react';
-import { sanitizeFileName, sanitizeInput } from '@/lib/sanitizer';
+import { sanitizeFileName, sanitizeInput } from '@/lib/utils/sanitizer';
 
 interface PluginUploadProps {
   onSuccess?: () => void;

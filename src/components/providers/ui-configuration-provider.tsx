@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, ReactNode } from 'react';
 import { useUIConfigurationStore, UIConfiguration, FeatureFlags } from '@/stores/ui-configuration-store';
-import { logger } from '@/lib/logger';
+import { logger } from '@/services/monitoring/logger';
 
 interface UIConfigurationContextType {
   configuration: UIConfiguration | null;
@@ -69,7 +69,7 @@ export function UIConfigurationProvider({ children }: UIConfigurationProviderPro
   // Apply dynamic API client timeouts based on configuration
   useEffect(() => {
     if (configuration?.timeouts) {
-      const { apiClient } = require('@/lib/api');
+      const { apiClient } = require('@/services/api');
       
       // Update default timeout
       apiClient.defaults.timeout = configuration.timeouts.default;

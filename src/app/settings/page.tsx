@@ -25,7 +25,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { api } from '@/services/api';
 import { usePreferences } from '@/components/providers/preferences-provider';
 import { useUIConfiguration } from '@/components/providers/ui-configuration-provider';
 import { StatusIndicator } from '@/components/ui/status-indicator';

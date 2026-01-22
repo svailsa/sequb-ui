@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
-import { discoveryClient, type RegionInfo, formatRegionDisplay, getRegionFlag } from '@/lib/discovery';
-import { useI18n } from '@/providers/i18n-provider';
+import { api } from '@/services/api';
+import { discoveryClient, type RegionInfo, formatRegionDisplay, getRegionFlag } from '@/services/discovery/discovery';
+import { useI18n } from '@/components/providers/i18n-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,10 +14,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff, Loader2, Github, Chrome, Check, X, MapPin, Globe } from 'lucide-react';
-import { authService } from '@/lib/auth-service';
-import { rateLimiter, RateLimitConfigs } from '@/lib/rate-limiter';
-import { sanitizeEmail, sanitizeInput } from '@/lib/sanitizer';
-import { csrfService } from '@/lib/csrf';
+import { authService } from '@/services/auth/auth-service';
+import { rateLimiter, RateLimitConfigs } from '@/services/auth/rate-limiter';
+import { sanitizeEmail, sanitizeInput } from '@/lib/utils/sanitizer';
+import { csrfService } from '@/services/auth/csrf';
 
 interface PasswordStrength {
   score: number;

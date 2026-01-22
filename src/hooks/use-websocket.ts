@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { wsService, WSMessage, ExecutionUpdateMessage, WorkflowEventMessage } from '@/lib/websocket';
+import { wsService, WSMessage, ExecutionUpdateMessage, WorkflowEventMessage } from '@/services/websocket';
 
 interface UseWebSocketOptions {
   autoConnect?: boolean;

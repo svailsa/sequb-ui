@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { authService } from '@/lib/auth-service';
-import { api } from '@/lib/api';
-import { logger } from '@/lib/logger';
+import { authService } from '@/services/auth/auth-service';
+import { api } from '@/services/api';
+import { logger } from '@/services/monitoring/logger';
 
 interface AuthGuardProps {
   children: React.ReactNode;

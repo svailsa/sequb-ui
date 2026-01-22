@@ -1,8 +1,8 @@
 "use client";
 
 import { EventEmitter } from 'events';
-import { safeJsonParse } from './safe-json';
-import { logger } from './logger';
+import { safeJsonParse } from '@/lib/utils/safe-json';
+import { logger } from '@/services/monitoring/logger';
 
 export interface WebSocketMessage {
   type: string;
@@ -61,7 +61,7 @@ class WebSocketService extends EventEmitter {
   private getToken(): string | null {
     if (typeof window === 'undefined') return null;
     // Use auth service for token management
-    const { authService } = require('./auth-service');
+    const { authService } = require('@/services/auth/auth-service');
     return authService.getToken();
   }
 

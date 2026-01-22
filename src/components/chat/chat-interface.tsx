@@ -3,7 +3,7 @@
 import { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Send, Bot, User, Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { useChatStore } from "@/stores/chat-store";
 import { StatusIndicator } from "@/components/ui/status-indicator";
 import { useUIConfiguration } from "@/components/providers/ui-configuration-provider";

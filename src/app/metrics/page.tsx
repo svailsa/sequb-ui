@@ -5,8 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
-import { api } from '@/lib/api';
-import { logger } from '@/lib/logger';
+import { api } from '@/services/api';
+import { logger } from '@/services/monitoring/logger';
 import { 
   TrendingUp, 
   TrendingDown, 

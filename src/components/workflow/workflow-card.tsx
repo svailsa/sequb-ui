@@ -15,8 +15,8 @@ import {
   Calendar,
   Tag
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { formatDate, formatRelativeTime } from '@/lib/utils';
+import { cn } from '@/lib/utils/cn';
+import { formatDate, formatRelativeTime } from '@/lib/utils/cn';
 
 interface WorkflowCardProps {
   workflow: Workflow;

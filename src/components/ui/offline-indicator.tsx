@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import { useOffline } from '@/lib/offline';
+import { useOffline } from '@/services/offline/offline';
 import { WifiOff, Wifi, AlertTriangle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/cn';
 import {
   Tooltip,
   TooltipContent,

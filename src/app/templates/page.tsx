@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { api } from '@/services/api';
 import TemplateGallery from '@/components/template/template-gallery';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';

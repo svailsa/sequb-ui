@@ -5,7 +5,7 @@ import { User, Settings, LogOut } from "lucide-react";
 import { StatusIndicator } from "@/components/ui/status-indicator";
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import LanguageSelector from "@/components/language-selector";
-import { useI18n } from "@/providers/i18n-provider";
+import { useI18n } from "@/components/providers/i18n-provider";
 import { useUIConfigurationStore } from "@/stores/ui-configuration-store";
 import Link from "next/link";
 

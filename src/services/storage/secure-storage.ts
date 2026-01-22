@@ -3,8 +3,8 @@
  * Provides encryption and secure handling for sensitive data persistence
  */
 
-import { logger } from './logger';
-import { safeJsonParse, safeJsonStringify } from './safe-json';
+import { logger } from '@/services/monitoring/logger';
+import { safeJsonParse, safeJsonStringify } from '@/lib/utils/safe-json';
 
 interface StorageOptions {
   encrypt?: boolean;

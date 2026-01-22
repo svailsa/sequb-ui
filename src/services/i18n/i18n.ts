@@ -1,4 +1,4 @@
-import { apiClient } from './api';
+import { apiClient } from '@/services/api/client';
 
 export type Language = 'en' | 'es' | 'fr' | 'de' | 'zh' | 'ja' | 'ar' | 'ur';
 

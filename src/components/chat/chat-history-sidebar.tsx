@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, MessageSquare, Trash2, Edit3, Check, X, MoreHorizontal } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { useChatStore } from "@/stores/chat-store";
 import { ChatSession } from "@/types/sequb";
 

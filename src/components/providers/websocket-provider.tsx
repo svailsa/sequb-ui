@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useWebSocket } from '@/hooks/use-websocket';
-import { ExecutionUpdateMessage, WorkflowEventMessage } from '@/lib/websocket';
+import { ExecutionUpdateMessage, WorkflowEventMessage } from '@/services/websocket';
 
 interface WebSocketContextType {
   isConnected: boolean;

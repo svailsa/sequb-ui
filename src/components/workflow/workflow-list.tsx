@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { WorkflowCard } from './workflow-card';
-import { api } from '@/lib/api';
+import { api } from '@/services/api';
 import { Workflow, PaginatedResponse } from '@/types/sequb';
 import { Plus, Search, Filter } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

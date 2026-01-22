@@ -3,8 +3,8 @@
  * Manages authentication tokens with improved security
  */
 
-import { safeParseJWT } from './safe-json';
-import { logger } from './logger';
+import { safeParseJWT } from '@/lib/utils/safe-json';
+import { logger } from '@/services/monitoring/logger';
 
 class AuthService {
   private readonly TOKEN_KEY = 'sequb_token';

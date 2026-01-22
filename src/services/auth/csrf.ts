@@ -3,8 +3,8 @@
  * Generates and validates CSRF tokens to prevent unauthorized requests
  */
 
-import { safeJsonParse, safeJsonStringify } from './safe-json';
-import { logger } from './logger';
+import { safeJsonParse, safeJsonStringify } from '@/lib/utils/safe-json';
+import { logger } from '@/services/monitoring/logger';
 
 class CSRFService {
   private readonly TOKEN_KEY = 'csrf_token';

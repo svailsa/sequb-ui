@@ -3,8 +3,8 @@
  * Handles region discovery, user-region mapping, and cross-region redirects
  */
 
-import { safeJsonParse } from './safe-json';
-import { logger } from './logger';
+import { safeJsonParse } from '@/lib/utils/safe-json';
+import { logger } from '@/services/monitoring/logger';
 
 export interface RegionInfo {
   code: string;

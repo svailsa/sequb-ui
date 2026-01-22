@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { wsService } from '@/lib/websocket';
-import { api } from '@/lib/api';
+import { wsService } from '@/services/websocket';
+import { api } from '@/services/api';
 
 export interface SystemStatus {
   backend: 'healthy' | 'degraded' | 'unavailable';

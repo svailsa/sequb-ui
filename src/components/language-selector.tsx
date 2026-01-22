@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useI18n } from '@/providers/i18n-provider';
+import { useI18n } from '@/components/providers/i18n-provider';
 import { Button } from '@/components/ui/button';
 import { Globe } from 'lucide-react';
-import { Language } from '@/lib/i18n';
+import { Language } from '@/services/i18n/i18n';
 
 const languageNames: Record<Language, string> = {
   en: 'English',

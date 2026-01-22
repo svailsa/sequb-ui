@@ -18,7 +18,7 @@ import {
   CheckCircle,
   BarChart3
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { useNodeRegistryStore } from "@/stores/node-registry-store";
 import { useUIConfigurationStore } from "@/stores/ui-configuration-store";
 

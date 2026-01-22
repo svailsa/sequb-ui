@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, ReactNode } from 'react';
 import { usePreferencesStore, UserPreferences } from '@/stores/preferences-store';
-import { logger } from '@/lib/logger';
+import { logger } from '@/services/monitoring/logger';
 
 interface PreferencesContextType {
   preferences: UserPreferences | null;

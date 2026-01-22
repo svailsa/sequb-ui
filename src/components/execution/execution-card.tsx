@@ -9,8 +9,8 @@ import {
   Timer,
   DollarSign
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { formatDate, formatRelativeTime } from '@/lib/utils';
+import { cn } from '@/lib/utils/cn';
+import { formatDate, formatRelativeTime } from '@/lib/utils/cn';
 import { ExecutionStatusIndicator } from '@/components/ui/execution-status-indicator';
 
 interface ExecutionCardProps {

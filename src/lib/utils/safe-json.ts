@@ -3,7 +3,7 @@
  * Prevents application crashes from malformed JSON
  */
 
-import { logger } from './logger';
+import { logger } from '@/services/monitoring/logger';
 
 /**
  * Safely parse JSON with error handling

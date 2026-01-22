@@ -3,8 +3,8 @@
  * Prevents abuse by limiting the frequency of certain actions
  */
 
-import { safeJsonParse, safeJsonStringify } from './safe-json';
-import { logger } from './logger';
+import { safeJsonParse, safeJsonStringify } from '@/lib/utils/safe-json';
+import { logger } from '@/services/monitoring/logger';
 
 interface RateLimitConfig {
   maxRequests: number;

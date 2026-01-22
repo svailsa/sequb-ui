@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Registry, NodeType } from '@/types/sequb';
-import { api } from '@/lib/api';
+import { api } from '@/services/api';
 
 interface NodeRegistryStore {
   registry: Registry | null;

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { ChatMessage, ChatSession } from '@/types/sequb';
-import { api } from '@/lib/api';
+import { api } from '@/services/api';
 
 interface ChatStore {
   sessions: ChatSession[];
