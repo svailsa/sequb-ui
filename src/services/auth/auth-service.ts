@@ -109,8 +109,9 @@ class AuthService {
 
   /**
    * Check if a JWT token is expired
+   * Uses backend-driven configuration for buffer time
    */
-  isTokenExpired(token: string): boolean {
+  async isTokenExpired(token: string): Promise<boolean> {
     const payload = safeParseJWT(token);
     if (!payload) {
       logger.warn('Invalid token format');
@@ -121,7 +122,15 @@ class AuthService {
     if (payload.exp) {
       const expirationTime = payload.exp * 1000; // Convert to milliseconds
       const currentTime = Date.now();
-      const bufferTime = 60 * 1000; // 1 minute buffer before expiration
+      
+      // Get buffer time from backend configuration
+      let bufferTime = 60 * 1000; // 1 minute default
+      try {
+        const { backendRateLimiter } = await import('./backend-rate-limiter');
+        bufferTime = await backendRateLimiter.getTokenRefreshTime();
+      } catch (error) {
+        logger.warn('Failed to get token refresh time from backend, using default', error);
+      }
       
       return currentTime >= (expirationTime - bufferTime);
     }

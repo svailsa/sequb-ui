@@ -68,7 +68,7 @@ interface PreferencesStore {
   updatePreferences: (updates: Partial<UserPreferences>) => Promise<void>;
   updatePreferenceField: (path: string, value: any) => void;
   savePreferences: () => Promise<void>;
-  resetToDefaults: () => void;
+  resetToDefaults: () => Promise<void>;
   markAsChanged: () => void;
   markAsSaved: () => void;
   
@@ -76,16 +76,17 @@ interface PreferencesStore {
   getPreference: (path: string) => any;
 }
 
-const DEFAULT_PREFERENCES: UserPreferences = {
-  theme: 'light',
+// Legacy defaults - will be replaced by backend-driven preferences
+const FALLBACK_PREFERENCES: UserPreferences = {
+  theme: 'auto',
   fontSize: 'medium',
   compactMode: false,
   animationsEnabled: true,
   
   language: 'en',
   timezone: 'UTC',
-  dateFormat: 'MM/DD/YYYY',
-  timeFormat: '12h',
+  dateFormat: 'YYYY-MM-DD',
+  timeFormat: '24h',
   
   notifications: {
     email: {
@@ -157,35 +158,46 @@ export const usePreferencesStore = create<PreferencesStore>()(
         set({ isLoading: true, error: null });
         
         try {
+          // Load backend-driven defaults first
+          let backendDefaults;
+          try {
+            const { backendPreferences } = await import('@/services/preferences/backend-preferences');
+            backendDefaults = await backendPreferences.getDefaults();
+          } catch (error) {
+            logger.warn('Failed to load backend preference defaults, using fallback', error);
+            backendDefaults = FALLBACK_PREFERENCES;
+          }
+
+          // Then load user preferences from backend
           const response = await api.preferences.get();
           const serverPreferences = response.data.data;
           
-          // Merge server preferences with defaults to ensure all fields are present
+          // Merge backend defaults with user preferences
           const mergedPreferences = {
-            ...DEFAULT_PREFERENCES,
+            ...backendDefaults,
             ...serverPreferences,
             notifications: {
-              ...DEFAULT_PREFERENCES.notifications,
+              ...backendDefaults.notifications,
               ...serverPreferences.notifications,
               email: {
-                ...DEFAULT_PREFERENCES.notifications.email,
+                ...backendDefaults.notifications?.email,
                 ...serverPreferences.notifications?.email,
               },
               inApp: {
-                ...DEFAULT_PREFERENCES.notifications.inApp,
+                ...backendDefaults.notifications?.inApp,
                 ...serverPreferences.notifications?.inApp,
               },
             },
             workflow: {
-              ...DEFAULT_PREFERENCES.workflow,
+              ...backendDefaults.workflow,
               ...serverPreferences.workflow,
             },
             advanced: {
-              ...DEFAULT_PREFERENCES.advanced,
+              ...backendDefaults.advanced,
               ...serverPreferences.advanced,
             },
             editor: {
-              ...DEFAULT_PREFERENCES.editor,
+              ...backendDefaults.editor,
               ...serverPreferences.editor,
             },
           };
@@ -204,7 +216,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
           
           // Fall back to defaults on error
           set({
-            preferences: { ...DEFAULT_PREFERENCES },
+            preferences: { ...FALLBACK_PREFERENCES },
             isLoading: false,
             error: 'Failed to load preferences from server. Using defaults.',
             hasUnsavedChanges: false,
@@ -281,11 +293,23 @@ export const usePreferencesStore = create<PreferencesStore>()(
         }
       },
       
-      resetToDefaults: () => {
-        set({
-          preferences: { ...DEFAULT_PREFERENCES },
-          hasUnsavedChanges: true,
-        });
+      resetToDefaults: async () => {
+        // Load backend defaults and reset to them
+        try {
+          const { backendPreferences } = await import('@/services/preferences/backend-preferences');
+          const backendDefaults = await backendPreferences.getDefaults();
+          
+          set({
+            preferences: { ...backendDefaults },
+            hasUnsavedChanges: true,
+          });
+        } catch (error) {
+          logger.warn('Failed to load backend defaults for reset, using fallback', error);
+          set({
+            preferences: { ...FALLBACK_PREFERENCES },
+            hasUnsavedChanges: true,
+          });
+        }
       },
       
       markAsChanged: () => {

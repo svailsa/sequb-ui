@@ -33,14 +33,14 @@ export async function getErrorContext(error: any): Promise<ErrorContext> {
 
   try {
     // Request context from backend
-    const response = await api.ui.getErrorContext(errorCode, error.details);
+    const response = await api.ui.getErrorContext(errorCode);
     const context = response.data.data;
     
     const enrichedContext: ErrorContext = {
       code: context.code || errorCode,
       message: context.message || error.message || 'An error occurred',
       details: context.details || error.details,
-      suggestions: context.suggestions || getDefaultSuggestions(errorCode),
+      suggestions: context.suggestions || await getDefaultSuggestions(errorCode),
       userActions: context.userActions || getDefaultUserActions(errorCode),
       technicalDetails: context.technicalDetails || formatTechnicalDetails(error),
       timestamp: new Date().toISOString(),
@@ -58,7 +58,7 @@ export async function getErrorContext(error: any): Promise<ErrorContext> {
       code: errorCode,
       message: error.message || 'An error occurred',
       details: error.details,
-      suggestions: getDefaultSuggestions(errorCode),
+      suggestions: await getDefaultSuggestions(errorCode),
       userActions: getDefaultUserActions(errorCode),
       technicalDetails: formatTechnicalDetails(error),
       timestamp: new Date().toISOString(),
@@ -103,56 +103,63 @@ function formatTechnicalDetails(error: any): string {
   return JSON.stringify(details, null, 2);
 }
 
-// Default suggestions based on error code
-function getDefaultSuggestions(errorCode: string): string[] {
-  const suggestions: Record<string, string[]> = {
-    HTTP_401: [
-      'Your session may have expired',
-      'Please log in again',
-      'Check your credentials',
-    ],
-    HTTP_403: [
-      'You may not have permission for this action',
-      'Contact an administrator for access',
-    ],
-    HTTP_404: [
-      'The requested resource was not found',
-      'Check the URL or ID',
-      'The item may have been deleted',
-    ],
-    HTTP_422: [
-      'Check the input data for errors',
-      'Some fields may be missing or invalid',
-      'Review the validation messages',
-    ],
-    HTTP_500: [
-      'Server error occurred',
-      'Try again in a few moments',
-      'Contact support if the issue persists',
-    ],
-    HTTP_503: [
-      'Service temporarily unavailable',
-      'The system may be under maintenance',
-      'Try again shortly',
-    ],
-    NETWORK_ERROR: [
-      'Check your internet connection',
-      'The server may be unreachable',
-      'Try refreshing the page',
-    ],
-    VALIDATION_ERROR: [
-      'Review the form inputs',
-      'Check for required fields',
-      'Ensure data formats are correct',
-    ],
-    TIMEOUT: [
-      'The request took too long',
+// Get suggestions from backend error context service
+async function getDefaultSuggestions(errorCode: string): Promise<string[]> {
+  try {
+    const { backendErrorContext } = await import('./backend-error-context');
+    const suggestions = await backendErrorContext.getSuggestions({ code: errorCode });
+    return suggestions;
+  } catch (error) {
+    // Fallback suggestions when backend is unavailable
+    const fallbackSuggestions: Record<string, string[]> = {
+      HTTP_401: [
+        'Your session may have expired',
+        'Please log in again',
+        'Check your credentials',
+      ],
+      HTTP_403: [
+        'You may not have permission for this action',
+        'Contact an administrator for access',
+      ],
+      HTTP_404: [
+        'The requested resource was not found',
+        'Check the URL or ID',
+        'The item may have been deleted',
+      ],
+      HTTP_422: [
+        'Check the input data for errors',
+        'Some fields may be missing or invalid',
+        'Review the validation messages',
+      ],
+      HTTP_500: [
+        'Server error occurred',
+        'Try again in a few moments',
+        'Contact support if the issue persists',
+      ],
+      HTTP_503: [
+        'Service temporarily unavailable',
+        'The system may be under maintenance',
+        'Try again shortly',
+      ],
+      NETWORK_ERROR: [
+        'Check your internet connection',
+        'The server may be unreachable',
+        'Try refreshing the page',
+      ],
+      VALIDATION_ERROR: [
+        'Review the form inputs',
+        'Check for required fields',
+        'Ensure data formats are correct',
+      ],
+      TIMEOUT: [
+        'The request took too long',
       'Check your connection',
       'Try a smaller operation',
     ],
   };
   
-  return suggestions[errorCode] || ['An unexpected error occurred', 'Please try again'];
+    return fallbackSuggestions[errorCode] || ['An unexpected error occurred', 'Please try again'];
+  }
 }
 
 // Default user actions based on error code
