@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { ChatMessage, ChatSession } from '@/types/sequb';
 import { api } from '@/services/api';
+import { backendErrorContext } from '@/services/monitoring/backend-error-context';
 
 interface ChatStore {
   sessions: ChatSession[];
@@ -52,22 +53,38 @@ export const useChatStore = create<ChatStore>()(
           return newSession.id;
         } catch (error) {
           console.error('Failed to create session:', error);
-          // Simplified fallback - create local session with clear offline indicator
-          const newSession: ChatSession = {
-            id: `offline_${Date.now()}`,
-            title: title || `Offline Chat`,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            message_count: 0
-          };
           
-          set(state => ({
-            sessions: [newSession, ...state.sessions],
-            currentSessionId: newSession.id,
-            messages: []
-          }));
-          
-          return newSession.id;
+          // Use backend error context to determine if we should create offline session
+          try {
+            const errorInfo = await backendErrorContext.formatErrorForDisplay(error);
+            
+            // Only create offline session for network/connection errors
+            if (errorInfo.severity === 'error' && errorInfo.recoverable) {
+              // Simplified fallback - create local session with clear offline indicator
+              const newSession: ChatSession = {
+                id: `offline_${Date.now()}`,
+                title: title || `Offline Chat`,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                message_count: 0
+              };
+              
+              set(state => ({
+                sessions: [newSession, ...state.sessions],
+                currentSessionId: newSession.id,
+                messages: []
+              }));
+              
+              return newSession.id;
+            } else {
+              // For non-recoverable errors, throw the error
+              throw error;
+            }
+          } catch (contextError) {
+            // Fallback if error context service fails
+            console.error('Failed to get error context:', contextError);
+            throw error; // Re-throw original error
+          }
         }
       },
 
@@ -185,29 +202,55 @@ export const useChatStore = create<ChatStore>()(
         } catch (error) {
           console.error('Chat error:', error);
           
-          // Simplified fallback - just indicate service unavailable
-          let fallbackContent = 'I apologize, but the chat service is currently unavailable. Please try again later.';
-          
-          // Check if it's a network error vs other errors
-          if (error && typeof error === 'object' && 'response' in error) {
-            const statusCode = (error as any).response?.status;
-            if (statusCode === 503) {
-              fallbackContent = 'The chat service is temporarily unavailable for maintenance. Please try again shortly.';
-            } else if (statusCode >= 500) {
-              fallbackContent = 'There was a server error. Our team has been notified and is working to resolve this issue.';
+          try {
+            // Use backend error context service for better error handling
+            const errorDisplay = await backendErrorContext.formatErrorForDisplay(error);
+            
+            // Create user-friendly error message with suggestions
+            let errorContent = `${errorDisplay.message}`;
+            
+            if (errorDisplay.suggestions && errorDisplay.suggestions.length > 0) {
+              errorContent += '\n\n**Here are some suggestions:**\n';
+              errorDisplay.suggestions.forEach((suggestion, index) => {
+                errorContent += `${index + 1}. ${suggestion}\n`;
+              });
             }
-          } else if (error && typeof error === 'object' && 'message' in error && (error as any).message.includes('Network Error')) {
-            fallbackContent = 'Unable to connect to the chat service. Please check your internet connection and try again.';
+            
+            // Add documentation links if available
+            if (errorDisplay.links && errorDisplay.links.length > 0) {
+              errorContent += '\n**For more help:**\n';
+              errorDisplay.links.forEach(link => {
+                errorContent += `• [${link.title}](${link.url}) - ${link.description}\n`;
+              });
+            }
+            
+            // Add retry information if applicable
+            if (errorDisplay.recoverable && errorDisplay.retryAfter) {
+              errorContent += `\n*Please wait ${errorDisplay.retryAfter} seconds before trying again.*`;
+            }
+            
+            const assistantMessage: ChatMessage = {
+              id: (Date.now() + 1).toString(),
+              session_id: currentSessionId,
+              role: 'assistant',
+              content: errorContent,
+              timestamp: new Date().toISOString(),
+            };
+            addMessage(assistantMessage);
+            
+          } catch (contextError) {
+            // Fallback if error context service also fails
+            console.error('Failed to get error context:', contextError);
+            
+            const assistantMessage: ChatMessage = {
+              id: (Date.now() + 1).toString(),
+              session_id: currentSessionId,
+              role: 'assistant',
+              content: 'I apologize, but the chat service is currently experiencing issues. Please try again later or contact support if the problem persists.',
+              timestamp: new Date().toISOString(),
+            };
+            addMessage(assistantMessage);
           }
-          
-          const assistantMessage: ChatMessage = {
-            id: (Date.now() + 1).toString(),
-            session_id: currentSessionId,
-            role: 'assistant',
-            content: fallbackContent,
-            timestamp: new Date().toISOString(),
-          };
-          addMessage(assistantMessage);
         } finally {
           set({ isLoading: false });
         }

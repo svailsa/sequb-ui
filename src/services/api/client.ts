@@ -330,4 +330,56 @@ export const api = {
     getTicket: (id: string) => 
       apiClient.get<ApiResponse<SupportTicket>>(`/api/v1/support/tickets/${id}`),
   },
+
+  // Authentication Configuration  
+  authConfig: {
+    getConfig: () => 
+      apiClient.get<ApiResponse<any>>('/api/v1/auth/config'),
+    getRateLimitStatus: (endpoint: string) => 
+      apiClient.post<ApiResponse<any>>('/api/v1/auth/rate-limit/status', { endpoint }),
+  },
+
+  // UI Configuration
+  ui: {
+    // UI Configuration
+    getConfiguration: () => 
+      apiClient.get<ApiResponse<any>>('/api/v1/ui/configuration'),
+    getFeatureFlags: () => 
+      apiClient.get<ApiResponse<any>>('/api/v1/ui/feature-flags'),
+    
+    // Validation schemas
+    getValidationSchemas: () => 
+      apiClient.get<ApiResponse<{ schemas: string[] }>>('/api/v1/ui/validation/schemas'),
+    getValidationSchema: (entity: string) => 
+      apiClient.get<ApiResponse<any>>(`/api/v1/ui/validation/schemas/${entity}`),
+    
+    // User preferences defaults
+    getPreferencesDefaults: () => 
+      apiClient.get<ApiResponse<any>>('/api/v1/ui/preferences/defaults'),
+    getPreferencesConstraints: () => 
+      apiClient.get<ApiResponse<any>>('/api/v1/ui/preferences/constraints'),
+    
+    // Error contexts
+    getErrorContexts: () => 
+      apiClient.get<ApiResponse<{ error_codes: string[] }>>('/api/v1/ui/errors/contexts'),
+    getErrorContext: (errorCode: string) => 
+      apiClient.get<ApiResponse<any>>(`/api/v1/ui/errors/contexts/${errorCode}`),
+    
+    // Email validation
+    validateEmail: (email: string, options?: {
+      checkDisposable?: boolean;
+      checkMxRecord?: boolean;
+      organizationDomainOnly?: boolean;
+    }) => 
+      apiClient.post<ApiResponse<any>>('/api/v1/ui/email/validate', {
+        email,
+        check_disposable: options?.checkDisposable,
+        check_mx_record: options?.checkMxRecord,
+        organization_domain_only: options?.organizationDomainOnly,
+      }),
+    getEmailSuggestions: (email: string) => 
+      apiClient.post<ApiResponse<{ suggestions: any[] }>>('/api/v1/ui/email/suggestions', { email }),
+    validateEmailsBulk: (emails: string[]) => 
+      apiClient.post<ApiResponse<any[]>>('/api/v1/ui/email/validate/bulk', emails),
+  },
 };
