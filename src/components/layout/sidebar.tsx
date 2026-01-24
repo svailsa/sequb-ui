@@ -16,7 +16,8 @@ import {
   Loader2,
   Webhook,
   CheckCircle,
-  BarChart3
+  BarChart3,
+  Inbox
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useNodeRegistryStore } from "@/stores/node-registry-store";
@@ -34,6 +35,12 @@ const allSidebarItems = [
     icon: Play,
     href: "/executions",
     featureFlag: null, // Always shown
+  },
+  {
+    label: "Messages",
+    icon: Inbox,
+    href: "/messages",
+    featureFlag: "messagingSystem",
   },
   {
     label: "Templates",

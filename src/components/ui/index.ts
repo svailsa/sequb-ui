@@ -1,4 +1,5 @@
 // UI Components Barrel Export
+export { Badge } from './badge';
 export { Button } from './button';
 export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './card';
 export { Checkbox } from './checkbox';
@@ -6,6 +7,7 @@ export { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 export { Input } from './input';
 export { Label } from './label';
 export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select';
+export { Separator } from './separator';
 export { Textarea } from './textarea';
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip';
 

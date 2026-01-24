@@ -9,7 +9,15 @@ import {
   ApprovalRequest,
   WebhookConfig,
   ApiResponse,
-  PaginatedResponse 
+  PaginatedResponse,
+  Message,
+  Inbox,
+  InboxFilter,
+  CreateMessageRequest,
+  UpdateMessageRequest,
+  SupportTicket,
+  CreateTicketRequest,
+  MessageApprovalRequest
 } from '@/types/sequb';
 import { authService } from '../auth/auth-service';
 import { csrfService } from '../auth/csrf';
@@ -289,5 +297,37 @@ export const api = {
       apiClient.get<ApiResponse<any>>('/api/v1/system/languages'),
     getThemes: () => 
       apiClient.get<ApiResponse<any>>('/api/v1/system/themes'),
+  },
+
+  // Messages
+  messages: {
+    list: (params?: { filter?: InboxFilter; offset?: number; limit?: number }) => 
+      apiClient.get<ApiResponse<{ messages: Message[]; total: number; unread_count: number }>>('/api/v1/messages', { params }),
+    get: (id: string) => 
+      apiClient.get<ApiResponse<Message>>(`/api/v1/messages/${id}`),
+    create: (data: CreateMessageRequest) => 
+      apiClient.post<ApiResponse<Message>>('/api/v1/messages', data),
+    update: (id: string, data: UpdateMessageRequest) => 
+      apiClient.put<ApiResponse<Message>>(`/api/v1/messages/${id}`, data),
+    delete: (id: string) => 
+      apiClient.delete(`/api/v1/messages/${id}`),
+    approve: (id: string, data: MessageApprovalRequest) => 
+      apiClient.post<ApiResponse<void>>(`/api/v1/messages/${id}/approve`, data),
+  },
+
+  // Inbox
+  inbox: {
+    get: (params?: { filter?: InboxFilter; offset?: number; limit?: number }) => 
+      apiClient.get<ApiResponse<Inbox>>('/api/v1/inbox', { params }),
+  },
+
+  // Support Tickets
+  support: {
+    listTickets: (params?: { status?: string; page?: number; per_page?: number }) => 
+      apiClient.get<PaginatedResponse<SupportTicket>>('/api/v1/support/tickets', { params }),
+    createTicket: (data: CreateTicketRequest) => 
+      apiClient.post<ApiResponse<SupportTicket>>('/api/v1/support/tickets', data),
+    getTicket: (id: string) => 
+      apiClient.get<ApiResponse<SupportTicket>>(`/api/v1/support/tickets/${id}`),
   },
 };

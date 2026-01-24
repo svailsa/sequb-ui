@@ -44,6 +44,7 @@ sequb-ui/
 │   │   ├── (dashboard routes)/  # Main application pages
 │   │   ├── approvals/           # Approval management
 │   │   ├── executions/          # Execution monitoring
+│   │   ├── messages/            # Messaging system and inbox
 │   │   ├── metrics/             # Metrics dashboard
 │   │   ├── settings/            # User settings
 │   │   ├── templates/           # Template library
@@ -56,6 +57,7 @@ sequb-ui/
 │   │   ├── chat/               # Chat interface components
 │   │   ├── execution/          # Execution monitoring
 │   │   ├── layout/             # Layout (header, sidebar)
+│   │   ├── messages/           # Messaging system components
 │   │   ├── plugin/             # Plugin management
 │   │   ├── providers/          # All React providers
 │   │   ├── settings/           # Settings components
@@ -106,7 +108,8 @@ sequb-ui/
 │   │   └── ui-configuration-store.ts # UI config
 │   │
 │   ├── hooks/                 # Custom React hooks
-│   │   └── use-websocket.ts  # WebSocket hook
+│   │   ├── use-websocket.ts  # WebSocket hook
+│   │   └── use-toast.ts      # Toast notifications
 │   │
 │   └── types/                # TypeScript definitions
 │       └── sequb.ts          # Core type definitions
@@ -123,10 +126,10 @@ sequb-ui/
 
 ### Services Layer (New)
 The services directory contains all business logic and external integrations:
-- **api/**: Centralized API client with all endpoints
+- **api/**: Centralized API client with all endpoints including messages
 - **auth/**: Authentication, CSRF protection, rate limiting
 - **monitoring/**: Logging and error context with backend integration
-- **websocket/**: Real-time communication
+- **websocket/**: Real-time communication for executions and messages
 - **validation/**: Backend-driven schema validation
 - **offline/**: Progressive enhancement and offline queue
 - **storage/**: Secure data persistence
@@ -225,10 +228,26 @@ The frontend expects a sequb-protocol server with these endpoints:
 - `POST /api/v1/auth/register` - User registration
 - `POST /api/v1/auth/mfa/*` - MFA operations
 
+#### Messages and Notifications
+- `GET /api/v1/messages` - List user messages
+- `GET /api/v1/messages/:id` - Get specific message
+- `PUT /api/v1/messages/:id` - Update message (mark read, archive)
+- `DELETE /api/v1/messages/:id` - Delete message
+- `POST /api/v1/messages/:id/approve` - Handle approval responses
+- `GET /api/v1/inbox` - Get user inbox with filters
+- `GET /api/v1/support/tickets` - List support tickets
+- `POST /api/v1/support/tickets` - Create support ticket
+- `POST /api/v1/messages/notifications/send` - Send notifications
+
 ### WebSocket Events
 - `execution_update` - Real-time execution status
 - `workflow_event` - Workflow state changes
 - `system_status` - Backend health updates
+- `message_created` - New message notifications
+- `message_updated` - Message status changes
+- `approval_received` - Approval workflow responses
+- `ticket_created` - New support tickets
+- `ticket_updated` - Support ticket status changes
 
 ## Current Implementation Status
 
@@ -250,6 +269,15 @@ The frontend expects a sequb-protocol server with these endpoints:
 - Error boundary with backend context
 - Dynamic feature flags system
 - Connection quality monitoring
+- **Comprehensive messaging system with:**
+  - Unified inbox for all notifications
+  - Multi-category message support (approvals, alerts, errors, tickets)
+  - Real-time message delivery and updates
+  - Human-in-the-loop approval workflows
+  - Support ticket management
+  - Message filtering and search capabilities
+  - Archive and deletion operations
+  - Priority-based message organization
 
 ### ⚠️ Known Limitations
 - Backend required for full functionality
@@ -292,6 +320,36 @@ myEndpoint: {
   create: (data) => apiClient.post('/api/v1/my-endpoint', data),
 }
 ```
+
+#### 4. Messages System Components
+The messaging system follows a modular component structure:
+
+```typescript
+// Message display components
+import { MessageCard, MessageList, MessageDialog } from '@/components/messages';
+
+// Core message types
+interface Message {
+  id: string;
+  category: MessageCategory; // union type for different message types
+  priority: MessagePriority; // critical, high, normal, low
+  status: MessageStatus;     // unread, read, archived, resolved, expired
+  // ... other fields
+}
+
+// Usage patterns
+<MessageList 
+  messages={messages} 
+  onApprove={handleApproval}
+  onMarkAsRead={markAsRead} 
+/>
+```
+
+##### Component Responsibilities:
+- **MessageCard**: Individual message display with quick actions
+- **MessageList**: Paginated list with filtering and search
+- **MessageDialog**: Detailed view with approval interface
+- **Inbox API**: Backend integration with real-time updates
 
 ### Best Practices
 1. **Use services layer** for business logic

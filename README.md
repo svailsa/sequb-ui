@@ -13,15 +13,17 @@ Sequb UI provides a comprehensive browser-based interface for creating, managing
 - **Visual Workflow Editor**: Drag-and-drop interface using React Flow
 - **Real-time Monitoring**: Live execution tracking via WebSocket
 - **Backend-Driven Architecture**: Dynamic UI configuration and feature flags
+- **Messaging System**: Unified inbox for notifications, approvals, and support tickets
 
 ### Advanced Features
 - **Authentication**: Secure login/register with MFA/TOTP support
 - **Multi-language Support**: 8 languages with RTL support
 - **Offline Capabilities**: Progressive enhancement with queue management
 - **Plugin System**: Upload and manage custom workflow nodes
-- **Approval Workflows**: Multi-step approval chains
+- **Approval Workflows**: Multi-step approval chains with messaging integration
 - **Webhook Integration**: Event-driven workflow triggers
 - **Metrics Dashboard**: Performance monitoring and analytics
+- **Support System**: Integrated ticketing and help desk functionality
 
 ## Technology Stack
 
@@ -71,6 +73,7 @@ src/
 │   ├── ui/               # Reusable UI components
 │   ├── auth/             # Authentication components
 │   ├── chat/             # Chat interface
+│   ├── messages/         # Messaging system components
 │   ├── workflow/         # Workflow editor
 │   └── providers/        # React context providers
 ├── services/             # Business logic
@@ -108,6 +111,10 @@ POST /api/v1/workflows/:id/execute # Execute workflow
 GET  /api/v1/executions/:id     # Execution status
 GET  /api/v1/ui/configuration   # UI configuration
 GET  /api/v1/user/preferences   # User preferences
+GET  /api/v1/messages           # List user messages
+GET  /api/v1/inbox              # Get user inbox
+POST /api/v1/messages/:id/approve # Handle approvals
+GET  /api/v1/support/tickets    # Support tickets
 ```
 
 ### WebSocket Events
@@ -117,6 +124,10 @@ GET  /api/v1/user/preferences   # User preferences
 - execution_update   # Execution progress
 - workflow_event    # Workflow state changes
 - system_status     # Backend health
+- message_created   # New message notifications
+- message_updated   # Message status changes
+- approval_received # Approval responses
+- ticket_created    # New support tickets
 ```
 
 ## Configuration
@@ -271,6 +282,19 @@ chore: Update dependencies
 ```
 
 ## Roadmap
+
+### Version 1.0 (Completed)
+- [x] Full authentication with MFA/TOTP
+- [x] Visual workflow editor with React Flow
+- [x] Real-time execution monitoring
+- [x] Comprehensive messaging system
+- [x] Human-in-the-loop approval workflows
+- [x] Support ticket management
+- [x] Multi-language support (8 languages)
+- [x] Plugin system with custom nodes
+- [x] Webhook integration
+- [x] Metrics dashboard
+- [x] Offline capabilities
 
 ### Version 1.1 (Q1 2024)
 - [ ] Automated testing suite

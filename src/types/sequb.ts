@@ -1,5 +1,137 @@
 // Core types matching sequb-protocol backend
 
+// Message system types
+export type MessagePriority = 'critical' | 'high' | 'normal' | 'low';
+export type MessageStatus = 'unread' | 'read' | 'archived' | 'resolved' | 'expired';
+export type MessageCategoryType = 'human_approval' | 'system_alert' | 'workflow_error' | 'support_ticket';
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'expired';
+export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
+
+export interface MessageId {
+  id: string;
+}
+
+export interface ApprovalContext {
+  question: string;
+  details?: string;
+  options: string[];
+  required_approvers: string[];
+  status: ApprovalStatus;
+  response?: ApprovalResponse;
+}
+
+export interface ApprovalResponse {
+  approved: boolean;
+  notes?: string;
+  responded_at: string;
+  responder_id: string;
+}
+
+export type MessageCategory = 
+  | {
+      type: 'human_approval';
+      workflow_id: string;
+      execution_id: string;
+      node_id: string;
+      timeout?: string;
+      context: ApprovalContext;
+    }
+  | {
+      type: 'system_alert';
+      alert_type: string;
+      severity: string;
+    }
+  | {
+      type: 'workflow_error';
+      workflow_id: string;
+      execution_id: string;
+      error_code: string;
+      error_details?: string;
+    }
+  | {
+      type: 'support_ticket';
+      ticket_id: string;
+      status: TicketStatus;
+    };
+
+export interface Message {
+  id: string;
+  user_id: string;
+  category: MessageCategory;
+  title: string;
+  body: string;
+  priority: MessagePriority;
+  status: MessageStatus;
+  created_at: string;
+  updated_at: string;
+  read_at?: string;
+  expires_at?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface Inbox {
+  user_id: string;
+  messages: Message[];
+  unread_count: number;
+  total_count: number;
+  has_priority_messages?: boolean;
+  last_sync?: string;
+}
+
+export type InboxFilter = 'all' | 'unread' | 'priority' | 'category';
+
+export interface SupportTicket {
+  id: string;
+  user_id: string;
+  subject: string;
+  description: string;
+  status: TicketStatus;
+  priority: MessagePriority;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+  resolved_at?: string;
+  assigned_to?: string;
+  messages: TicketMessage[];
+}
+
+export interface TicketMessage {
+  id: string;
+  ticket_id: string;
+  sender_id: string;
+  message: string;
+  attachments: string[];
+  created_at: string;
+}
+
+export interface CreateMessageRequest {
+  user_id: string;
+  category: MessageCategory;
+  title: string;
+  body: string;
+  priority: MessagePriority;
+  expires_at?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface UpdateMessageRequest {
+  status?: MessageStatus;
+  read?: boolean;
+  archive?: boolean;
+}
+
+export interface CreateTicketRequest {
+  subject: string;
+  description: string;
+  priority: MessagePriority;
+  tags: string[];
+}
+
+export interface MessageApprovalRequest {
+  approved: boolean;
+  notes?: string;
+}
+
 export interface User {
   id: string;
   email: string;
