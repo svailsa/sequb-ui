@@ -41,7 +41,7 @@ class AuthService {
     // Prefer in-memory token
     if (this.tokenInMemory) {
       // Check if token is expired
-      if (this.isTokenExpired(this.tokenInMemory)) {
+      if (this.isTokenExpiredSync(this.tokenInMemory)) {
         this.clearToken();
         return null;
       }
@@ -53,7 +53,7 @@ class AuthService {
       const token = sessionStorage.getItem(this.TOKEN_KEY);
       if (token) {
         // Validate token before using
-        if (this.isTokenExpired(token)) {
+        if (this.isTokenExpiredSync(token)) {
           this.clearToken();
           return null;
         }
@@ -63,7 +63,7 @@ class AuthService {
       
       // Check localStorage for migration (one-time)
       const oldToken = localStorage.getItem(this.TOKEN_KEY);
-      if (oldToken && !this.isTokenExpired(oldToken)) {
+      if (oldToken && !this.isTokenExpiredSync(oldToken)) {
         // Migrate from localStorage to sessionStorage
         this.setToken(oldToken);
         localStorage.removeItem(this.TOKEN_KEY);
@@ -105,6 +105,29 @@ class AuthService {
       localStorage.removeItem(this.TOKEN_KEY); // Clear old localStorage tokens
       localStorage.removeItem('sequb_token'); // Clear legacy key
     }
+  }
+
+  /**
+   * Check if a JWT token is expired (synchronous version with default buffer)
+   * For immediate checks without backend configuration
+   */
+  isTokenExpiredSync(token: string): boolean {
+    const payload = safeParseJWT(token);
+    if (!payload) {
+      logger.warn('Invalid token format');
+      return true; // Consider invalid tokens as expired
+    }
+    
+    // Check expiration with default 1 minute buffer
+    if (payload.exp) {
+      const expirationTime = payload.exp * 1000; // Convert to milliseconds
+      const currentTime = Date.now();
+      const bufferTime = 60 * 1000; // 1 minute default buffer
+      
+      return currentTime >= (expirationTime - bufferTime);
+    }
+    
+    return true; // No expiration claim means expired
   }
 
   /**
@@ -182,7 +205,7 @@ class AuthService {
    */
   isAuthenticated(): boolean {
     const token = this.getToken();
-    return !!token && !this.isTokenExpired(token);
+    return !!token && !this.isTokenExpiredSync(token);
   }
 
   /**

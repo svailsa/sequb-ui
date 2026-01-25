@@ -173,32 +173,45 @@ export const usePreferencesStore = create<PreferencesStore>()(
           const serverPreferences = response.data.data;
           
           // Merge backend defaults with user preferences
-          const mergedPreferences = {
+          // Ensure we have proper fallback structure for notifications
+          const backendNotifications = backendDefaults.notifications || FALLBACK_PREFERENCES.notifications;
+          const serverNotifications = serverPreferences.notifications || {};
+          
+          const mergedPreferences: UserPreferences = {
+            // Start with fallback preferences as base
+            ...FALLBACK_PREFERENCES,
+            // Override with backend defaults
             ...backendDefaults,
+            // Override with server preferences
             ...serverPreferences,
+            // Handle nested notifications object carefully
             notifications: {
-              ...backendDefaults.notifications,
-              ...serverPreferences.notifications,
               email: {
-                ...backendDefaults.notifications?.email,
-                ...serverPreferences.notifications?.email,
+                ...FALLBACK_PREFERENCES.notifications.email,
+                ...(backendNotifications as any)?.email,
+                ...(serverNotifications as any)?.email,
               },
               inApp: {
-                ...backendDefaults.notifications?.inApp,
-                ...serverPreferences.notifications?.inApp,
+                ...FALLBACK_PREFERENCES.notifications.inApp,
+                ...(backendNotifications as any)?.inApp,
+                ...(serverNotifications as any)?.inApp,
               },
             },
+            // Handle other nested objects
             workflow: {
-              ...backendDefaults.workflow,
-              ...serverPreferences.workflow,
+              ...FALLBACK_PREFERENCES.workflow,
+              ...(backendDefaults as any)?.workflow,
+              ...(serverPreferences as any)?.workflow,
             },
             advanced: {
-              ...backendDefaults.advanced,
-              ...serverPreferences.advanced,
+              ...FALLBACK_PREFERENCES.advanced,
+              ...(backendDefaults as any)?.advanced,
+              ...(serverPreferences as any)?.advanced,
             },
             editor: {
-              ...backendDefaults.editor,
-              ...serverPreferences.editor,
+              ...FALLBACK_PREFERENCES.editor,
+              ...(backendDefaults as any)?.editor,
+              ...(serverPreferences as any)?.editor,
             },
           };
           
@@ -299,8 +312,14 @@ export const usePreferencesStore = create<PreferencesStore>()(
           const { backendPreferences } = await import('@/services/preferences/backend-preferences');
           const backendDefaults = await backendPreferences.getDefaults();
           
+          // Ensure we merge with fallback preferences to maintain type safety
+          const resetPreferences: UserPreferences = {
+            ...FALLBACK_PREFERENCES,
+            ...(backendDefaults as any),
+          };
+          
           set({
-            preferences: { ...backendDefaults },
+            preferences: resetPreferences,
             hasUnsavedChanges: true,
           });
         } catch (error) {

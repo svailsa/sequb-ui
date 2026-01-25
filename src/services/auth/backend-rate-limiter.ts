@@ -84,8 +84,8 @@ class BackendRateLimiter {
       this.authConfig = response.data.data;
       this.lastConfigFetch = Date.now();
       logger.debug('Auth configuration loaded from backend', {
-        rate_limits_count: Object.keys(this.authConfig.rate_limits).length,
-        session_timeout: this.authConfig.session_config.timeout_seconds,
+        rate_limits_count: this.authConfig?.rate_limits ? Object.keys(this.authConfig.rate_limits).length : 0,
+        session_timeout: this.authConfig?.session_config?.timeout_seconds,
       });
     } catch (error) {
       logger.error('Failed to load auth configuration from backend', error);

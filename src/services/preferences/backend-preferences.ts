@@ -126,10 +126,13 @@ class BackendPreferencesService {
 
     try {
       const response = await api.ui.getPreferencesDefaults();
-      this.defaults = response.data.data;
-      this.lastDefaultsFetch = now;
-      logger.debug('User preferences defaults loaded from backend');
-      return this.defaults;
+      const defaults = response.data?.data;
+      if (defaults) {
+        this.defaults = defaults;
+        this.lastDefaultsFetch = now;
+        logger.debug('User preferences defaults loaded from backend');
+        return defaults;
+      }
     } catch (error) {
       logger.error('Failed to load preferences defaults from backend', error);
     }
@@ -153,10 +156,13 @@ class BackendPreferencesService {
 
     try {
       const response = await api.ui.getPreferencesConstraints();
-      this.constraints = response.data.data;
-      this.lastConstraintsFetch = now;
-      logger.debug('User preferences constraints loaded from backend');
-      return this.constraints;
+      const constraints = response.data?.data;
+      if (constraints) {
+        this.constraints = constraints;
+        this.lastConstraintsFetch = now;
+        logger.debug('User preferences constraints loaded from backend');
+        return constraints;
+      }
     } catch (error) {
       logger.error('Failed to load preferences constraints from backend', error);
     }

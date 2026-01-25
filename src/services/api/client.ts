@@ -285,6 +285,41 @@ export const api = {
       apiClient.post<ApiResponse<any>>(`/api/v1/ui/errors/${errorCode}`, { details }),
     getValidationSchema: (entityType: string, entityId?: string) => 
       apiClient.get<ApiResponse<any>>(`/api/v1/ui/validation/${entityType}${entityId ? `/${entityId}` : ''}`),
+    
+    // Validation schemas
+    getValidationSchemas: () => 
+      apiClient.get<ApiResponse<{ schemas: string[] }>>('/api/v1/ui/validation/schemas'),
+    getValidationSchemaByEntity: (entity: string) => 
+      apiClient.get<ApiResponse<any>>(`/api/v1/ui/validation/schemas/${entity}`),
+    
+    // User preferences defaults
+    getPreferencesDefaults: () => 
+      apiClient.get<ApiResponse<any>>('/api/v1/ui/preferences/defaults'),
+    getPreferencesConstraints: () => 
+      apiClient.get<ApiResponse<any>>('/api/v1/ui/preferences/constraints'),
+    
+    // Error contexts
+    getErrorContexts: () => 
+      apiClient.get<ApiResponse<{ error_codes: string[] }>>('/api/v1/ui/errors/contexts'),
+    getErrorContextById: (errorCode: string) => 
+      apiClient.get<ApiResponse<any>>(`/api/v1/ui/errors/contexts/${errorCode}`),
+    
+    // Email validation
+    validateEmail: (email: string, options?: {
+      checkDisposable?: boolean;
+      checkMxRecord?: boolean;
+      organizationDomainOnly?: boolean;
+    }) => 
+      apiClient.post<ApiResponse<any>>('/api/v1/ui/email/validate', {
+        email,
+        check_disposable: options?.checkDisposable,
+        check_mx_record: options?.checkMxRecord,
+        organization_domain_only: options?.organizationDomainOnly,
+      }),
+    getEmailSuggestions: (email: string) => 
+      apiClient.post<ApiResponse<{ suggestions: any[] }>>('/api/v1/ui/email/suggestions', { email }),
+    validateEmailsBulk: (emails: string[]) => 
+      apiClient.post<ApiResponse<any[]>>('/api/v1/ui/email/validate/bulk', emails),
   },
 
   // System Configuration
@@ -297,6 +332,20 @@ export const api = {
       apiClient.get<ApiResponse<any>>('/api/v1/system/languages'),
     getThemes: () => 
       apiClient.get<ApiResponse<any>>('/api/v1/system/themes'),
+  },
+
+  // Internationalization (i18n)
+  i18n: {
+    getConfiguration: () => 
+      apiClient.get<ApiResponse<any>>('/api/v1/system/i18n/config'),
+    getSupportedLanguages: () => 
+      apiClient.get<ApiResponse<any>>('/api/v1/system/i18n/languages'),
+    getTranslations: (language: string) => 
+      apiClient.get<ApiResponse<any>>(`/api/v1/system/i18n/translations/${language}`),
+    getTranslationsCoverage: (language: string) => 
+      apiClient.get<ApiResponse<{ coverage: number }>>(`/api/v1/system/i18n/coverage/${language}`),
+    getAvailableKeys: () => 
+      apiClient.get<ApiResponse<{ keys: string[] }>>('/api/v1/system/i18n/keys'),
   },
 
   // Messages
@@ -339,47 +388,4 @@ export const api = {
       apiClient.post<ApiResponse<any>>('/api/v1/auth/rate-limit/status', { endpoint }),
   },
 
-  // UI Configuration
-  ui: {
-    // UI Configuration
-    getConfiguration: () => 
-      apiClient.get<ApiResponse<any>>('/api/v1/ui/configuration'),
-    getFeatureFlags: () => 
-      apiClient.get<ApiResponse<any>>('/api/v1/ui/feature-flags'),
-    
-    // Validation schemas
-    getValidationSchemas: () => 
-      apiClient.get<ApiResponse<{ schemas: string[] }>>('/api/v1/ui/validation/schemas'),
-    getValidationSchema: (entity: string) => 
-      apiClient.get<ApiResponse<any>>(`/api/v1/ui/validation/schemas/${entity}`),
-    
-    // User preferences defaults
-    getPreferencesDefaults: () => 
-      apiClient.get<ApiResponse<any>>('/api/v1/ui/preferences/defaults'),
-    getPreferencesConstraints: () => 
-      apiClient.get<ApiResponse<any>>('/api/v1/ui/preferences/constraints'),
-    
-    // Error contexts
-    getErrorContexts: () => 
-      apiClient.get<ApiResponse<{ error_codes: string[] }>>('/api/v1/ui/errors/contexts'),
-    getErrorContext: (errorCode: string) => 
-      apiClient.get<ApiResponse<any>>(`/api/v1/ui/errors/contexts/${errorCode}`),
-    
-    // Email validation
-    validateEmail: (email: string, options?: {
-      checkDisposable?: boolean;
-      checkMxRecord?: boolean;
-      organizationDomainOnly?: boolean;
-    }) => 
-      apiClient.post<ApiResponse<any>>('/api/v1/ui/email/validate', {
-        email,
-        check_disposable: options?.checkDisposable,
-        check_mx_record: options?.checkMxRecord,
-        organization_domain_only: options?.organizationDomainOnly,
-      }),
-    getEmailSuggestions: (email: string) => 
-      apiClient.post<ApiResponse<{ suggestions: any[] }>>('/api/v1/ui/email/suggestions', { email }),
-    validateEmailsBulk: (emails: string[]) => 
-      apiClient.post<ApiResponse<any[]>>('/api/v1/ui/email/validate/bulk', emails),
-  },
 };

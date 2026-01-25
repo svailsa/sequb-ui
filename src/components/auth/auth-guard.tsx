@@ -39,7 +39,7 @@ export default function AuthGuard({
           }
           
           // Check if token is expired
-          if (authService.isTokenExpired(token)) {
+          if (authService.isTokenExpiredSync(token)) {
             // Token expired - clear and redirect
             authService.clearToken();
             const redirectUrl = `${redirectTo}?from=${encodeURIComponent(pathname)}`;
