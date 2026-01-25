@@ -24,6 +24,8 @@ Sequb UI provides a comprehensive browser-based interface for creating, managing
 - **Webhook Integration**: Event-driven workflow triggers
 - **Metrics Dashboard**: Performance monitoring and analytics
 - **Support System**: Integrated ticketing and help desk functionality
+- **Backend-Driven Configuration**: Dynamic policies, validation, and error handling
+- **Email Validation**: Comprehensive email checking with smart suggestions
 
 ## Technology Stack
 
@@ -77,9 +79,11 @@ src/
 │   ├── workflow/         # Workflow editor
 │   └── providers/        # React context providers
 ├── services/             # Business logic
-│   ├── api/             # API client
-│   ├── auth/            # Authentication services
-│   ├── monitoring/      # Logging and errors
+│   ├── api/             # API client with comprehensive endpoints
+│   ├── auth/            # Authentication and rate limiting
+│   ├── monitoring/      # Logging, errors, and backend context
+│   ├── preferences/     # Backend-driven user preferences
+│   ├── validation/      # Dynamic validation from backend
 │   └── websocket/       # Real-time communication
 ├── stores/              # Zustand state stores
 ├── lib/utils/           # Utility functions
@@ -104,7 +108,7 @@ The frontend expects these API endpoints from sequb-protocol:
 
 ```
 GET  /api/v1/health              # Health check
-GET  /api/v1/nodes/registry      # Available node types
+GET  /api/v1/nodes/registry      # Available node types with user validation
 POST /api/v1/workflows           # Create workflow
 GET  /api/v1/workflows           # List workflows
 POST /api/v1/workflows/:id/execute # Execute workflow
@@ -115,6 +119,14 @@ GET  /api/v1/messages           # List user messages
 GET  /api/v1/inbox              # Get user inbox
 POST /api/v1/messages/:id/approve # Handle approvals
 GET  /api/v1/support/tickets    # Support tickets
+
+# Backend-Driven Services
+GET  /api/v1/ui/security/policies        # Security policies & rules
+GET  /api/v1/ui/errors/contexts         # Error contexts & suggestions
+GET  /api/v1/ui/validation/schemas      # Dynamic validation schemas
+POST /api/v1/ui/email/validate         # Email validation service
+POST /api/v1/ui/email/suggestions      # Email correction suggestions
+POST /api/v1/ui/email/validate/bulk    # Bulk email validation
 ```
 
 ### WebSocket Events
@@ -146,19 +158,24 @@ NODE_ENV=development
 ### Backend-Driven Configuration
 
 The UI automatically fetches configuration from the backend:
-- Feature flags
-- UI limits and timeouts
+- Feature flags and UI limits
+- Security policies and validation rules
 - Available languages and timezones
-- Chat examples and prompts
-- Workflow constraints
+- Chat examples with error context
+- Workflow constraints and node permissions
+- Email validation with smart suggestions
+- Rate limiting configurations
+- User-specific preferences and defaults
 
 ## Architecture Highlights
 
 ### Backend-Driven Design
 - UI configuration loaded from server
-- Dynamic feature toggles
-- Backend validation schemas
-- Synchronized user preferences
+- Dynamic feature toggles and security policies
+- Backend validation schemas and error contexts
+- Synchronized user preferences with organizational defaults
+- Rate limiting and authentication configuration
+- Email validation with disposable domain detection
 
 ### Progressive Enhancement
 - Offline detection and queuing
@@ -168,10 +185,11 @@ The UI automatically fetches configuration from the backend:
 
 ### Security Features
 - CSRF token protection
-- Client-side rate limiting
-- Input sanitization
-- Secure token storage
-- XSS prevention
+- Backend-driven rate limiting
+- Dynamic input sanitization policies
+- Secure token storage with refresh timing
+- XSS prevention and content security policies
+- Email validation and disposable domain blocking
 
 ## Development Guide
 

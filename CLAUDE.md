@@ -9,7 +9,7 @@ Sequb UI is the web frontend for the Sequb Protocol workflow orchestration syste
 **Architecture**: Next.js 14 with App Router, TypeScript 5.7+ with strict mode
 **Development Stage**: Full-featured implementation with comprehensive backend integration
 **Backend Integration**: Complete API client with offline fallback capabilities
-**Key Achievement**: Backend-driven architecture with dynamic UI configuration
+**Key Achievement**: Backend-driven architecture with dynamic configuration, validation, and error handling
 
 ## Technology Stack
 
@@ -71,18 +71,22 @@ sequb-ui/
 │   │   │   └── index.ts       # Barrel export
 │   │   ├── auth/              # Authentication services
 │   │   │   ├── auth-service.ts
+│   │   │   ├── backend-rate-limiter.ts # Backend-driven rate limiting
 │   │   │   ├── csrf.ts
 │   │   │   ├── rate-limiter.ts
 │   │   │   └── index.ts
 │   │   ├── monitoring/        # Monitoring and logging
 │   │   │   ├── logger.ts
 │   │   │   ├── error-context.ts
+│   │   │   ├── backend-error-context.ts # Backend error service
 │   │   │   └── index.ts
+│   │   ├── preferences/       # Backend-driven user preferences
+│   │   │   └── backend-preferences.ts
 │   │   ├── websocket/         # WebSocket service
 │   │   │   ├── websocket.ts
 │   │   │   └── index.ts
 │   │   ├── validation/        # Backend-driven validation
-│   │   │   └── validation.ts
+│   │   │   └── backend-validation.ts
 │   │   ├── offline/           # Offline support
 │   │   │   └── offline.ts
 │   │   ├── storage/           # Secure storage
@@ -124,13 +128,14 @@ sequb-ui/
 
 ## Key Implementation Details
 
-### Services Layer (New)
+### Services Layer (Enhanced)
 The services directory contains all business logic and external integrations:
-- **api/**: Centralized API client with all endpoints including messages
-- **auth/**: Authentication, CSRF protection, rate limiting
-- **monitoring/**: Logging and error context with backend integration
+- **api/**: Centralized API client with comprehensive backend endpoints
+- **auth/**: Authentication, CSRF protection, backend-driven rate limiting
+- **monitoring/**: Logging and backend error context with actionable suggestions
+- **preferences/**: Backend-driven user preferences with organizational defaults
 - **websocket/**: Real-time communication for executions and messages
-- **validation/**: Backend-driven schema validation
+- **validation/**: Backend-driven schema validation and email services
 - **offline/**: Progressive enhancement and offline queue
 - **storage/**: Secure data persistence
 - **i18n/**: Multi-language support (8 languages)
@@ -148,22 +153,26 @@ The services directory contains all business logic and external integrations:
 
 ### Backend-Driven Features
 - Dynamic UI configuration loaded on startup
-- Feature flags for controlled rollouts
-- Validation schemas fetched from backend
-- Error context and suggestions from server
-- User preferences synchronized bidirectionally
+- Feature flags and security policies for controlled rollouts
+- Validation schemas and email validation fetched from backend
+- Error context with actionable suggestions from server
+- User preferences synchronized bidirectionally with organizational defaults
 - Dynamic language/timezone/theme options
-- Chat examples from backend configuration
-- Workflow node registry from server
+- Chat examples with intelligent error handling
+- Workflow node registry with user-specific permissions and validation
+- Rate limiting configurations from server
+- Email validation with disposable domain detection and smart suggestions
 
 ### Security Features
 - CSRF token protection
-- Rate limiting on sensitive operations
+- Backend-driven rate limiting on sensitive operations
 - Secure storage with encryption support
-- Input sanitization for XSS prevention
+- Dynamic input sanitization for XSS prevention
 - Safe JSON parsing to prevent crashes
 - Bearer token authentication
-- Automatic token refresh
+- Backend-controlled automatic token refresh timing
+- Security policies fetched from server
+- Email validation with disposable domain blocking
 
 ### Progressive Enhancement
 - Offline detection and queue management
@@ -216,7 +225,7 @@ The frontend expects a sequb-protocol server with these endpoints:
 - `GET /api/v1/ui/configuration` - UI configuration
 - `GET /api/v1/ui/feature-flags` - Feature flags
 - `GET /api/v1/user/preferences` - User preferences
-- `GET /api/v1/nodes/registry` - Workflow node types
+- `GET /api/v1/nodes/registry` - Workflow node types with user permissions
 
 #### Workflow Management
 - `GET/POST /api/v1/workflows/*` - CRUD operations
@@ -238,6 +247,18 @@ The frontend expects a sequb-protocol server with these endpoints:
 - `GET /api/v1/support/tickets` - List support tickets
 - `POST /api/v1/support/tickets` - Create support ticket
 - `POST /api/v1/messages/notifications/send` - Send notifications
+
+#### Backend-Driven Services (New)
+- `GET /api/v1/ui/security/policies` - Security policies and validation rules
+- `GET /api/v1/ui/errors/contexts` - List available error contexts
+- `GET /api/v1/ui/errors/contexts/:code` - Get specific error context
+- `GET /api/v1/ui/validation/schemas` - List validation schemas
+- `GET /api/v1/ui/validation/schemas/:entity` - Get entity schema
+- `POST /api/v1/ui/email/validate` - Email validation service
+- `POST /api/v1/ui/email/suggestions` - Email correction suggestions
+- `POST /api/v1/ui/email/validate/bulk` - Bulk email validation
+- `GET /api/v1/ui/preferences/defaults` - User preference defaults
+- `GET /api/v1/ui/preferences/constraints` - Preference constraints
 
 ### WebSocket Events
 - `execution_update` - Real-time execution status
@@ -278,6 +299,13 @@ The frontend expects a sequb-protocol server with these endpoints:
   - Message filtering and search capabilities
   - Archive and deletion operations
   - Priority-based message organization
+- **Backend-driven architecture enhancements:**
+  - Dynamic security policies and validation rules
+  - Context-aware error handling with actionable suggestions
+  - Backend-controlled rate limiting and authentication timing
+  - Email validation service with smart corrections
+  - User-specific node registry with permission-based filtering
+  - Organizational preference defaults and constraints
 
 ### ⚠️ Known Limitations
 - Backend required for full functionality
