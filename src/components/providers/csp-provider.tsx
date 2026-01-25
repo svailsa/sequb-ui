@@ -137,7 +137,7 @@ export function SecureInlineScript({ children, id, onLoad, onError }: SecureInli
   const { nonce, isNonceReady } = useCSP();
 
   useEffect(() => {
-    if (!isNonceReady || typeof window === 'undefined') return;
+    if (!isNonceReady || typeof window === 'undefined') return undefined;
 
     try {
       const script = document.createElement('script');
@@ -163,6 +163,7 @@ export function SecureInlineScript({ children, id, onLoad, onError }: SecureInli
       };
     } catch (error) {
       onError?.(error as Error);
+      return undefined;
     }
   }, [children, id, nonce, isNonceReady, onLoad, onError]);
 

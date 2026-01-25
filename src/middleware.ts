@@ -30,7 +30,7 @@ export function middleware(request: NextRequest) {
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
       img-src 'self' data: blob: https: *.gravatar.com *.githubusercontent.com;
       font-src 'self' data: https://fonts.gstatic.com;
-      connect-src 'self' ws: wss: ${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'} ${process.env.NODE_ENV === 'development' ? 'ws://localhost:3000 wss://localhost:3000' : ''};
+      connect-src 'self' ws: wss: ${process.env['NEXT_PUBLIC_API_URL'] || 'http://localhost:3000'} ${process.env['NODE_ENV'] === 'development' ? 'ws://localhost:3000 wss://localhost:3000' : ''};
       media-src 'none';
       object-src 'none';
       frame-src 'none';
@@ -59,7 +59,7 @@ export function middleware(request: NextRequest) {
   response.headers.set('X-Permitted-Cross-Domain-Policies', 'none');
   
   // Only set HSTS in production
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env['NODE_ENV'] === 'production') {
     response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
   }
 

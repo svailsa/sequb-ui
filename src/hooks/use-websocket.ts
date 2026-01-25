@@ -201,6 +201,7 @@ export function useExecutionMonitor(executionId: string | null) {
         unsubscribeFromExecution(executionId);
       };
     }
+    return undefined;
   }, [executionId, isConnected, subscribeToExecution, unsubscribeFromExecution]);
 
   const clearLogs = useCallback(() => {

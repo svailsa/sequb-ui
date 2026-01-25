@@ -6,7 +6,7 @@ import { logger } from '@/services/monitoring/logger';
 
 export interface WebSocketMessage {
   type: string;
-  data: any;
+  data: unknown;
   timestamp: string;
 }
 
@@ -31,7 +31,7 @@ export interface WorkflowEventMessage {
   data: {
     event: 'created' | 'updated' | 'deleted' | 'executed';
     workflow_id: string;
-    data?: any;
+    data?: unknown;
   };
 }
 
@@ -53,7 +53,7 @@ class WebSocketService extends EventEmitter {
   }
 
   private getWebSocketUrl(): string {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const baseUrl = process.env['NEXT_PUBLIC_API_URL'] || 'http://localhost:3000';
     const wsUrl = baseUrl.replace(/^http/, 'ws');
     return `${wsUrl}/api/v1/ws`;
   }

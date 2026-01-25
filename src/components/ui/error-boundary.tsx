@@ -38,7 +38,7 @@ export class ErrorBoundary extends Component<Props, State> {
     };
   }
 
-  async componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  override async componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     logger.error('Error caught by boundary:', {
       error: error.toString(),
       componentStack: errorInfo.componentStack,
@@ -94,7 +94,7 @@ export class ErrorBoundary extends Component<Props, State> {
     alert('Error details copied to clipboard. Please include this when reporting the issue.');
   };
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       const { error, errorContext } = this.state;
       

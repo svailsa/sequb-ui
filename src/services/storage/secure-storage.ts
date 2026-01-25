@@ -13,11 +13,11 @@ interface StorageOptions {
 }
 
 interface StoredData {
-  data: any;
+  data: unknown;
   timestamp: number;
-  ttl?: number;
-  encrypted?: boolean;
-  iv?: string; // Initialization Vector for AES-GCM
+  ttl: number | undefined;
+  encrypted: boolean | undefined;
+  iv: string | undefined; // Initialization Vector for AES-GCM
 }
 
 interface EncryptedData {
@@ -240,7 +240,7 @@ class SecureStorage {
   /**
    * Set item in secure storage
    */
-  async setItem(key: string, value: any, options: StorageOptions = {}): Promise<boolean> {
+  async setItem(key: string, value: unknown, options: StorageOptions = {}): Promise<boolean> {
     const { encrypt = false, ttl, persistent = false } = options;
     const storage = this.getStorage(persistent);
     
@@ -253,8 +253,9 @@ class SecureStorage {
       const storedData: StoredData = {
         data: value,
         timestamp: Date.now(),
-        ttl,
-        encrypted: encrypt,
+        ttl: ttl ?? undefined,
+        encrypted: encrypt ? true : undefined,
+        iv: undefined,
       };
 
       let serialized = safeJsonStringify(storedData);
@@ -292,7 +293,7 @@ class SecureStorage {
   /**
    * Set item in secure storage (synchronous wrapper for backward compatibility)
    */
-  setItemSync(key: string, value: any, options: StorageOptions = {}): boolean {
+  setItemSync(key: string, value: unknown, options: StorageOptions = {}): boolean {
     if (options.encrypt) {
       logger.warn('Synchronous setItem with encryption may use legacy encryption');
       // For synchronous calls with encryption, use legacy method
@@ -308,8 +309,9 @@ class SecureStorage {
         const storedData: StoredData = {
           data: value,
           timestamp: Date.now(),
-          ttl,
+          ttl: ttl ?? undefined,
           encrypted: true,
+          iv: undefined,
         };
 
         let serialized = safeJsonStringify(storedData);
@@ -573,34 +575,34 @@ export const secureStorage = new SecureStorage();
 // Convenience methods for common patterns
 export const SecureStorageHelpers = {
   // Store with 1 hour TTL
-  setTemporary: (key: string, value: any) => 
+  setTemporary: (key: string, value: unknown) => 
     secureStorage.setItem(key, value, { ttl: 60 * 60 * 1000 }),
   
   // Store encrypted with 24 hour TTL (async for Web Crypto API)
-  setSecure: async (key: string, value: any) => 
+  setSecure: async (key: string, value: unknown) => 
     await secureStorage.setItem(key, value, { encrypt: true, ttl: 24 * 60 * 60 * 1000 }),
   
   // Store in localStorage (persistent)
-  setPersistent: (key: string, value: any) => 
+  setPersistent: (key: string, value: unknown) => 
     secureStorage.setItem(key, value, { persistent: true }),
   
   // Store encrypted and persistent (async for Web Crypto API)
-  setSecurePersistent: async (key: string, value: any) => 
+  setSecurePersistent: async (key: string, value: unknown) => 
     await secureStorage.setItem(key, value, { encrypt: true, persistent: true }),
 
   // Get encrypted data (async for Web Crypto API)
-  getSecure: async <T = any>(key: string, defaultValue: T | null = null) =>
+  getSecure: async <T = unknown>(key: string, defaultValue: T | null = null) =>
     await secureStorage.getItem<T>(key, defaultValue),
 
   // Synchronous helpers (backward compatibility, may use legacy encryption)
   sync: {
-    setSecure: (key: string, value: any) => 
+    setSecure: (key: string, value: unknown) => 
       secureStorage.setItemSync(key, value, { encrypt: true, ttl: 24 * 60 * 60 * 1000 }),
     
-    setSecurePersistent: (key: string, value: any) => 
+    setSecurePersistent: (key: string, value: unknown) => 
       secureStorage.setItemSync(key, value, { encrypt: true, persistent: true }),
     
-    getSecure: <T = any>(key: string, defaultValue: T | null = null) =>
+    getSecure: <T = unknown>(key: string, defaultValue: T | null = null) =>
       secureStorage.getItemSync<T>(key, defaultValue),
   }
 };

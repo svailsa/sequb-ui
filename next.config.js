@@ -50,7 +50,7 @@ const nextConfig = {
               style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
               img-src 'self' data: blob: https: *.gravatar.com *.githubusercontent.com;
               font-src 'self' data: https://fonts.gstatic.com;
-              connect-src 'self' ws: wss: ${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'} ${process.env.NODE_ENV === 'development' ? 'ws://localhost:3000 wss://localhost:3000' : ''};
+              connect-src 'self' ws: wss: ${process.env['NEXT_PUBLIC_API_URL'] || 'http://localhost:3000'} ${process.env['NODE_ENV'] === 'development' ? 'ws://localhost:3000 wss://localhost:3000' : ''};
               media-src 'none';
               object-src 'none';
               frame-src 'none';
@@ -100,7 +100,7 @@ const nextConfig = {
     return [
       {
         source: '/api/v1/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/:path*`,
+        destination: `${process.env['NEXT_PUBLIC_API_URL'] || 'http://localhost:3000'}/api/v1/:path*`,
       },
     ];
   },

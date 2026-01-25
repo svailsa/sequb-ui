@@ -7,7 +7,29 @@
     ],
     "allowJs": true,
     "skipLibCheck": true,
+    
+    // TypeScript Strictness - Strong but practical
     "strict": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    // "noUncheckedIndexedAccess": true,  // Too strict for current codebase
+    // "exactOptionalPropertyTypes": true,  // Too strict for current codebase
+    "noImplicitOverride": true,
+    // "noPropertyAccessFromIndexSignature": true,  // Too strict for process.env
+    
+    // Additional strict checking
+    "noUnusedLocals": false,  // Let ESLint handle this
+    "noUnusedParameters": false,  // Let ESLint handle this
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    
+    // Module resolution and compilation
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -16,6 +38,7 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+    
     "plugins": [
       {
         "name": "next"
@@ -26,7 +49,7 @@
         "./src/*"
       ]
     },
-    "target": "ES2017"
+    "target": "ES2020"
   },
   "include": [
     "next-env.d.ts",
